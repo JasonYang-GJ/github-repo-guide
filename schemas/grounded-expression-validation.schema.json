@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:repo-artifact:schema:grounded-expression-validation:v1",
+  "title": "GroundedExpressionValidation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["grounded_expression_validation_version", "status", "truth_gate", "findings", "semantic_lock", "host_validation", "clause_trace", "source_fact_coverage", "rewritten_fact_coverage", "unsupported_technical_claims", "fact_trace", "caveat_coverage", "story_fidelity", "truth_boundary_gates"],
+  "properties": {
+    "grounded_expression_validation_version": { "const": 1 },
+    "status": { "enum": ["PASS", "FAIL"] },
+    "truth_gate": { "enum": ["PASS", "FAIL"] },
+    "findings": { "type": "array", "items": { "$ref": "#/$defs/finding" } },
+    "semantic_lock": { "$ref": "#/$defs/semanticLock" },
+    "host_validation": { "type": "object" },
+    "clause_trace": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/clauseTrace" } },
+    "source_fact_coverage": { "type": "string", "pattern": "^[0-9]+/[0-9]+$" },
+    "rewritten_fact_coverage": { "type": "string", "pattern": "^[0-9]+/[0-9]+$" },
+    "unsupported_technical_claims": { "type": "integer", "minimum": 0 },
+    "fact_trace": { "$ref": "#/$defs/factTrace" },
+    "caveat_coverage": { "$ref": "urn:repo-artifact:schema:caveat-coverage:v1" },
+    "story_fidelity": { "$ref": "#/$defs/storyFidelity" },
+    "truth_boundary_gates": { "$ref": "#/$defs/truthGates" }
+  },
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "revision_clause_id", "details"],
+      "properties": {
+        "code": { "type": "string", "minLength": 1 },
+        "revision_clause_id": { "type": ["string", "null"] },
+        "details": { "type": "string", "minLength": 1 }
+      }
+    },
+    "semanticLock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expression_semantic_lock_version", "status", "allowed_operations", "forbidden_operations"],
+      "properties": {
+        "expression_semantic_lock_version": { "const": 1 },
+        "status": { "enum": ["PASS", "FAIL"] },
+        "allowed_operations": { "type": "array", "uniqueItems": true, "items": { "enum": ["SIMPLIFY", "COMPRESS", "REORDER", "MERGE", "NATURALIZE"] } },
+        "forbidden_operations": {
+          "type": "array",
+          "prefixItems": [{ "const": "EXPAND" }, { "const": "STRENGTHEN" }, { "const": "GENERALIZE" }, { "const": "EXPLAIN_CAUSE" }, { "const": "INVENT_PURPOSE" }],
+          "items": false,
+          "minItems": 5,
+          "maxItems": 5
+        }
+      }
+    },
+    "clauseTrace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["revision_segment_id", "revision_clause_id", "source_clause_ids", "source_segment_ids", "rewrite_operation", "statement_kind", "fact_refs", "canonical_fact_ids", "evidence_ids", "host_alignment_methods", "status"],
+      "properties": {
+        "revision_segment_id": { "type": "string", "minLength": 1 },
+        "revision_clause_id": { "type": "string", "minLength": 1 },
+        "source_clause_ids": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "source_segment_ids": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "rewrite_operation": { "enum": ["PARAPHRASE", "MERGE", "COMPRESS", "REORDER", "EDITORIAL_POLISH"] },
+        "statement_kind": { "enum": ["TECHNICAL_FACT", "EDITORIAL_FRAMING", "TRANSITION", "DOCUMENTATION", "CAVEAT", "UNKNOWN", "QUESTION"] },
+        "fact_refs": { "type": "array", "items": { "type": "string" } },
+        "canonical_fact_ids": { "type": "array", "items": { "type": "string" } },
+        "evidence_ids": { "type": "array", "items": { "type": "string" } },
+        "host_alignment_methods": { "type": "array", "items": { "type": "string" } },
+        "status": { "enum": ["FACT_TRACED", "NON_TECHNICAL_ALLOWED", "REJECTED"] }
+      }
+    },
+    "factTrace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expected", "traced", "missing_fact_refs", "unsupported_technical_clauses"],
+      "properties": {
+        "expected": { "type": "integer", "minimum": 0 },
+        "traced": { "type": "integer", "minimum": 0 },
+        "missing_fact_refs": { "type": "array", "items": { "type": "string" } },
+        "unsupported_technical_clauses": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "storyFidelity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "human_editorial_takeaway_present", "prohibited_story_drift_present", "core_fact_refs_expected", "core_fact_refs_used"],
+      "properties": {
+        "status": { "enum": ["PASS", "FAIL"] },
+        "human_editorial_takeaway_present": { "type": "boolean" },
+        "prohibited_story_drift_present": { "type": "boolean" },
+        "core_fact_refs_expected": { "type": "array", "items": { "type": "string" } },
+        "core_fact_refs_used": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "truthGates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["technical_accuracy", "evidence_grounding", "safety", "runtime_outcome", "design_intent", "guarantee", "causality", "external_comparison", "novelty", "universal_quantifier", "absence", "symbol_name", "known_unknown", "story_fidelity", "caveat_coverage"],
+      "properties": {
+        "technical_accuracy": { "$ref": "#/$defs/passFail" },
+        "evidence_grounding": { "$ref": "#/$defs/passFail" },
+        "safety": { "$ref": "#/$defs/passFail" },
+        "runtime_outcome": { "$ref": "#/$defs/passFail" },
+        "design_intent": { "$ref": "#/$defs/passFail" },
+        "guarantee": { "$ref": "#/$defs/passFail" },
+        "causality": { "$ref": "#/$defs/passFail" },
+        "external_comparison": { "$ref": "#/$defs/passFail" },
+        "novelty": { "$ref": "#/$defs/passFail" },
+        "universal_quantifier": { "$ref": "#/$defs/passFail" },
+        "absence": { "$ref": "#/$defs/passFail" },
+        "symbol_name": { "$ref": "#/$defs/passFail" },
+        "known_unknown": { "$ref": "#/$defs/passFail" },
+        "story_fidelity": { "$ref": "#/$defs/passFail" },
+        "caveat_coverage": { "$ref": "#/$defs/passFail" }
+      }
+    },
+    "passFail": { "enum": ["PASS", "FAIL"] }
+  }
+}

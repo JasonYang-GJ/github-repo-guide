@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:repo-artifact:schema:human-composition-validation:v2",
+  "title": "HumanCompositionValidation v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["human_composition_validation_version", "composition_id", "validation_version", "source_host_semantics_version", "host_semantics_version", "repository", "commit", "fact_ir_version", "neighborhood_id", "neighborhood_fingerprint_sha256", "composer_context_fingerprint_sha256", "original_draft_fingerprint_sha256", "replay_draft_fingerprint_sha256", "semantic_input_unchanged", "selected_facts_valid", "selected_fact_resolution", "clause_traces", "unsupported_clauses", "known_unknown_conflicts", "reason_codes", "truth_status", "composition_status", "script_eligibility", "generation_metadata", "validation_fingerprint_sha256"],
+  "properties": {
+    "human_composition_validation_version": { "const": 2 },
+    "composition_id": { "type": "string", "pattern": "^composition_[a-z0-9_]+$" },
+    "validation_version": { "const": 2 },
+    "source_host_semantics_version": { "const": 2 },
+    "host_semantics_version": { "const": 3 },
+    "repository": { "$ref": "urn:repo-artifact:schema:grounded-fact-pack:v1#/$defs/repository" },
+    "commit": { "$ref": "#/$defs/commit" },
+    "fact_ir_version": { "enum": [1, 2] },
+    "neighborhood_id": { "type": "string", "pattern": "^neighborhood_[0-9a-f]{16}$" },
+    "neighborhood_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+    "composer_context_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+    "original_draft_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+    "replay_draft_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+    "semantic_input_unchanged": { "const": true },
+    "selected_facts_valid": { "type": "boolean" },
+    "selected_fact_resolution": { "type": "array", "items": { "$ref": "#/$defs/resolution" } },
+    "clause_traces": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/clause" } },
+    "unsupported_clauses": { "type": "array", "items": { "$ref": "#/$defs/clause" } },
+    "known_unknown_conflicts": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "reason_codes": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "truth_status": { "enum": ["PASS", "FAIL"] },
+    "composition_status": { "enum": ["HOST_VALIDATED", "HOST_REJECTED", "STALE"] },
+    "script_eligibility": {
+      "type": "object", "additionalProperties": false,
+      "required": ["eligible", "status", "reason"],
+      "properties": {
+        "eligible": { "const": false },
+        "status": { "const": "NOT_ELIGIBLE" },
+        "reason": { "enum": ["HUMAN_CONFIRMATION_REQUIRED", "HOST_TRUTH_VALIDATION_FAILED", "COMPOSITION_BINDING_STALE"] }
+      }
+    },
+    "generation_metadata": { "$ref": "#/$defs/zeroExecution" },
+    "validation_fingerprint_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "resolution": {
+      "type": "object", "additionalProperties": false,
+      "required": ["display_id", "canonical_fact_id", "status"],
+      "properties": {
+        "display_id": { "type": "string", "minLength": 1 },
+        "canonical_fact_id": { "type": ["string", "null"] },
+        "status": { "enum": ["RESOLVED", "REJECTED"] }
+      }
+    },
+    "clause": {
+      "type": "object", "additionalProperties": false,
+      "required": ["clause_id", "source_field", "source_span", "text", "clause_kind", "polarity", "supporting_fact_refs", "unsupported_anchors", "failure_codes", "truth_status", "diagnostic"],
+      "properties": {
+        "clause_id": { "type": "string", "pattern": "^(title|editorial_thesis|why_this_story)_[0-9]{3}$" },
+        "source_field": { "enum": ["title", "editorial_thesis", "why_this_story"] },
+        "source_span": {
+          "type": "object", "additionalProperties": false,
+          "required": ["start", "end"],
+          "properties": {
+            "start": { "type": "integer", "minimum": 0 },
+            "end": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "text": { "type": "string", "minLength": 1 },
+        "clause_kind": { "enum": ["TECHNICAL_CLAIM", "EDITORIAL_FRAMING", "QUESTION", "BOUNDARY_CAVEAT", "SAFETY", "OUTCOME", "DESIGN_INTENT", "UNKNOWN"] },
+        "polarity": { "enum": ["AFFIRMED", "NEGATED", "QUESTIONED", "MENTIONED"] },
+        "supporting_fact_refs": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "unsupported_anchors": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "failure_codes": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "truth_status": { "enum": ["PASS", "FAIL"] },
+        "diagnostic": {
+          "type": "object", "additionalProperties": false,
+          "required": ["what_is_supported", "what_is_missing", "classification_uncertainty"],
+          "properties": {
+            "what_is_supported": { "type": "string", "minLength": 1 },
+            "what_is_missing": { "type": ["string", "null"] },
+            "classification_uncertainty": { "type": ["string", "null"] }
+          }
+        }
+      }
+    },
+    "zeroExecution": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "paid_api_requests", "real_model_requests", "secret_reads", "repository_executions"],
+      "properties": {
+        "mode": { "const": "deterministic_offline_human_composition_validation_v2" },
+        "paid_api_requests": { "const": 0 },
+        "real_model_requests": { "const": 0 },
+        "secret_reads": { "const": 0 },
+        "repository_executions": { "const": 0 }
+      }
+    }
+  }
+}

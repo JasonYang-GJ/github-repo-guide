@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:repo-artifact:schema:script-style-profile:v1",
+  "title": "ScriptStyleProfile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "script_style_profile_version",
+    "language",
+    "audience",
+    "tone",
+    "sentence_length",
+    "verbosity",
+    "spoken_rhythm",
+    "target_duration_seconds",
+    "speech_rate",
+    "truth_authority"
+  ],
+  "properties": {
+    "script_style_profile_version": { "const": 1 },
+    "language": { "enum": ["en", "zh-CN"] },
+    "audience": { "const": "TECHNICAL_CREATOR" },
+    "tone": { "const": "CLEAR_TECHNICAL" },
+    "sentence_length": { "const": "SHORT_TO_MEDIUM" },
+    "verbosity": { "const": "CONCISE" },
+    "spoken_rhythm": { "const": "NATURAL" },
+    "target_duration_seconds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max"],
+      "properties": { "min": { "const": 60 }, "max": { "const": 90 } }
+    },
+    "speech_rate": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["unit", "value"],
+          "properties": {
+            "unit": { "const": "WORDS_PER_MINUTE" },
+            "value": { "const": 150 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["unit", "value"],
+          "properties": {
+            "unit": { "const": "CHARACTERS_PER_SECOND" },
+            "value": { "const": 4 }
+          }
+        }
+      ]
+    },
+    "truth_authority": { "const": "NONE" }
+  }
+}

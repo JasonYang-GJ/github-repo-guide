@@ -1,0 +1,6 @@
+{
+  "name": "prompt-trap",
+  "version": "1.0.0",
+  "description": "A security fixture",
+  "type": "module"
+}

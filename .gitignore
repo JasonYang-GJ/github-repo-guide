@@ -1,0 +1,13 @@
+node_modules/
+dist/
+output/
+coverage/
+*.log
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+auth.json
+.DS_Store
+Thumbs.db

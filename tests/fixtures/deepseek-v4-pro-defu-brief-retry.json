@@ -1,0 +1,87 @@
+{
+  "fixtureVersion": 1,
+  "provenance": {
+    "sourceArtifact": "output/deepseek-v4-pro-repo-a-brief-retry/brief-retry-result.json",
+    "sourceArtifactSha256": "5AAD88B07EB6240C43F4760B9117A645D1F62A81B9A544DF3323D76CCEEB4B0B",
+    "provider": "DeepSeek API",
+    "model": "deepseek-v4-pro",
+    "repository": "unjs/defu",
+    "commit": "82632b66f5914e9946edce300e10633a3d5c0cb7",
+    "finishReason": "stop",
+    "truncated": false
+  },
+  "rawBriefNarrative": {
+    "oneSentence": "defu is a lightweight utility for recursively assigning default properties to objects with customizable merge behavior.",
+    "summary": "The project provides a core `defu` function that deeply merges source objects with defaults, prioritizing leftmost arguments. It includes variants `defuFn` and `defuArrayFn` for function-based merging of defaults, a `createDefu` factory for custom merger logic, and TypeScript type utilities. The implementation skips nullish values and prototype-polluting keys, concatenates arrays, and relies on a plain object check to decide recursion.",
+    "problem": "Assigning default values to nested objects requires careful handling of arrays, nullish values, and custom merge strategies without mutating inputs or introducing security risks.",
+    "targetUsers": [
+      "JavaScript/TypeScript developers needing deep default merging",
+      "Library authors building configurable options systems",
+      "Applications requiring customizable merge hooks"
+    ],
+    "moduleInterpretations": [
+      {
+        "sourcePath": "src/defu.ts",
+        "semanticName": "Core merge implementation",
+        "responsibility": "Defines `_defu` base merge logic, `createDefu` factory, and exports `defu`, `defuFn`, `defuArrayFn`.",
+        "whyImportant": "Contains the primary runtime merging algorithm and public API entry points."
+      },
+      {
+        "sourcePath": "src/_utils.ts",
+        "semanticName": "Plain object detection",
+        "responsibility": "Provides `isPlainObject` to identify plain objects for recursive merging.",
+        "whyImportant": "Determines when values should be merged as objects versus assigned directly."
+      },
+      {
+        "sourcePath": "src/types.ts",
+        "semanticName": "TypeScript type definitions",
+        "responsibility": "Declares types and interfaces such as `Defu`, `DefuFn`, `DefuInstance`, `Merger`, and merge utility types.",
+        "whyImportant": "Enables compile-time type checking for recursive merge behavior."
+      },
+      {
+        "sourcePath": "lib/defu.cjs",
+        "semanticName": "CommonJS entry wrapper",
+        "responsibility": "Re-exports built module as CommonJS with default and named exports.",
+        "whyImportant": "Facilitates `require('defu')` usage and compatibility with CJS environments."
+      }
+    ]
+  },
+  "evidenceSnapshot": {
+    "evidence_record_version": 1,
+    "id": "evidence_symbol_src_defu_ts__defu_5",
+    "claim_id": "claim_symbol_src_defu_ts__defu_5",
+    "claim": "function _defu is declared in src/defu.ts.",
+    "repository": {
+      "url": "https://github.com/unjs/defu",
+      "commit_sha": "82632b66f5914e9946edce300e10633a3d5c0cb7"
+    },
+    "supports_evidence_ids": [],
+    "confidence": 1,
+    "verification_status": "verified",
+    "notes": "",
+    "limitations": [],
+    "evidence_type": "symbol_declaration",
+    "source_kind": "source_code",
+    "locator": {
+      "source_path": "src/defu.ts",
+      "blob_sha": "1b2b84e83453d2191e31e857f68385032959a9ff",
+      "symbol": {
+        "name": "_defu",
+        "kind": "function"
+      },
+      "line_start": 5,
+      "line_end": 42,
+      "excerpt": "function _defu<T>(baseObject: T, defaults: any, namespace = \".\", merger?: Merger): T {\n  if (!isPlainObject(defaults)) {\n    return _defu(baseObject, {}, namespace, merger);\n  }\n\n  const object = { ...defaults };\n\n  for (const key of Object.keys(baseObject as Record<string, any>)) {\n    if (key === \"__proto__\" || key === \"constructor\") {\n      continue;\n    }\n\n    const value = (baseObject as Record<string, any>)[key];\n\n    if (value === null || value === undefined) {\n      continue;\n    }\n\n    if (merger && merger(object, key, value, namespace)) {\n      continue;\n    }\n\n    if (Array.isArray(value) && Array.isArray(object[key])) {\n      object[key] = [...value, ...object[key]];\n    } else if (isPlainObject(value) && isPlainObject(object[key])) {\n      object[key] = _defu(\n        value,\n        object[key],\n        (namespace ? `${namespace}.` : \"\") + key.toString(),\n        merger,\n      );\n    } else {\n      object[key] = value;\n    }\n  }\n\n  return object;\n}",
+      "excerpt_sha256": "c162cedcbcbc23916cfe69bcdfe9e0c34320df19314184b7ac1f2f28f3f4b385"
+    },
+    "verification": {
+      "method": "ast_symbol",
+      "checked_at": "2026-08-31T16:16:47.848Z",
+      "commit_resolved": true,
+      "path_exists": true,
+      "symbol_exists": true,
+      "line_range_valid": true,
+      "excerpt_matches": true
+    }
+  }
+}

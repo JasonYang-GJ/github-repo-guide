@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:repo-artifact:schema:caveat-coverage:v1",
+  "title": "CaveatCoverage",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["caveat_coverage_version", "internal_known_unknowns", "spoken_caveats", "covered_risk_classes", "unspoken_internal_boundaries", "misleading_omission_risk", "status"],
+  "properties": {
+    "caveat_coverage_version": { "const": 1 },
+    "internal_known_unknowns": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/knownUnknown" } },
+    "spoken_caveats": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+    "covered_risk_classes": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/boundary" } },
+    "unspoken_internal_boundaries": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/boundary" } },
+    "misleading_omission_risk": { "enum": ["LOW", "HIGH"] },
+    "status": { "enum": ["PASS", "FAIL"] }
+  },
+  "$defs": {
+    "boundary": { "enum": ["RUNTIME_EXECUTION_OR_ORDER", "DATA_FLOW", "FULL_PATH_OR_BRANCH_COVERAGE", "ALIAS_RESOLUTION", "DYNAMIC_OR_INDIRECT_CALL_TARGETS", "SECURITY_OR_SSRF_OR_ATTACK_PREVENTION", "DESIGN_INTENT", "CORRECTNESS_OR_RELIABILITY"] },
+    "knownUnknown": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unknown_ref", "statement", "evidence_needed"],
+      "properties": {
+        "unknown_ref": { "type": "string", "pattern": "^gap_[a-z0-9_]+$" },
+        "statement": { "type": "string", "minLength": 1 },
+        "evidence_needed": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

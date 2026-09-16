@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:repo-artifact:schema:angle-refinement-context:v1",
+  "title": "AngleRefinementContext",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["angle_refinement_context_version", "status", "repository", "commit", "fact_ir_version", "base_candidate", "base_fact_refs", "base_facts", "related_fact_options", "known_unknowns", "search_policy", "refinement_limits", "host_reference_map", "provenance", "context_fingerprint_sha256", "generation_metadata"],
+  "properties": {
+    "angle_refinement_context_version": { "const": 1 },
+    "status": { "enum": ["READY", "NO_REFINEMENT_FACT_AVAILABLE"] },
+    "repository": { "$ref": "urn:repo-artifact:schema:grounded-fact-pack:v1#/$defs/repository" },
+    "commit": { "$ref": "#/$defs/commit" },
+    "fact_ir_version": { "const": 1 },
+    "base_candidate": { "$ref": "#/$defs/baseCandidate" },
+    "base_fact_refs": { "type": "array", "minItems": 1, "maxItems": 8, "uniqueItems": true, "items": { "$ref": "#/$defs/factRef" } },
+    "base_facts": { "type": "array", "minItems": 1, "maxItems": 8, "items": { "$ref": "#/$defs/factView" } },
+    "related_fact_options": { "type": "array", "maxItems": 12, "items": { "$ref": "#/$defs/relatedOption" } },
+    "known_unknowns": { "type": "array", "items": { "$ref": "#/$defs/knownUnknown" } },
+    "search_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "allowed_relations", "embedding_search", "vector_search", "llm_search", "global_clustering", "repository_specific_ranking", "ordering"],
+      "properties": {
+        "name": { "const": "DETERMINISTIC_LOCAL_FACT_GRAPH_V1" },
+        "allowed_relations": { "type": "array", "minItems": 7, "maxItems": 7, "uniqueItems": true, "items": { "$ref": "#/$defs/relation" } },
+        "embedding_search": { "const": false },
+        "vector_search": { "const": false },
+        "llm_search": { "const": false },
+        "global_clustering": { "const": false },
+        "repository_specific_ranking": { "const": false },
+        "ordering": { "const": "STRUCTURAL_PROXIMITY_THEN_CANONICAL_FACT_ID" }
+      }
+    },
+    "refinement_limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maximum_related_options", "maximum_selected_additional_facts", "maximum_total_supporting_facts"],
+      "properties": {
+        "maximum_related_options": { "type": "integer", "minimum": 0, "maximum": 12 },
+        "maximum_selected_additional_facts": { "type": "integer", "minimum": 0, "maximum": 4 },
+        "maximum_total_supporting_facts": { "const": 8 }
+      }
+    },
+    "host_reference_map": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["angle_refinement_reference_map_version", "entries"],
+      "properties": {
+        "angle_refinement_reference_map_version": { "const": 1 },
+        "entries": { "type": "array", "minItems": 1, "maxItems": 20, "items": { "$ref": "#/$defs/referenceEntry" } }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["human_selection_artifact", "fact_pack_artifact", "canonical_brief_artifact"],
+      "properties": {
+        "human_selection_artifact": { "$ref": "#/$defs/artifactReference" },
+        "fact_pack_artifact": { "$ref": "#/$defs/artifactReference" },
+        "canonical_brief_artifact": { "$ref": "#/$defs/artifactReference" }
+      }
+    },
+    "context_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+    "generation_metadata": { "$ref": "#/$defs/zeroExecution" }
+  },
+  "$defs": {
+    "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "factRef": { "type": "string", "pattern": "^fact_[0-9]{3}$" },
+    "gapRef": { "type": "string", "pattern": "^gap_[a-z0-9_]+$" },
+    "relation": { "enum": ["SHARED_ENTITY", "DIRECT_RELATION", "SAME_MODULE", "SAME_TECHNICAL_OBJECT", "RELATED_BEHAVIOR", "CONFIGURATION_OR_TYPE", "ONE_HOP"] },
+    "artifactReference": {
+      "type": "object", "additionalProperties": false, "required": ["artifact_path", "sha256"],
+      "properties": { "artifact_path": { "type": "string", "minLength": 1 }, "sha256": { "$ref": "#/$defs/sha256" } }
+    },
+    "baseCandidate": {
+      "type": "object", "additionalProperties": false,
+      "required": ["base_candidate_id", "base_candidate_fingerprint_sha256", "title", "angle_type", "canonical_grounded_brief_version", "editorial_thesis", "why_interesting", "target_audience", "editorial_strength", "editorial_scores", "known_caveats", "host_validation"],
+      "properties": {
+        "base_candidate_id": { "type": "string", "minLength": 1 },
+        "base_candidate_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+        "title": { "type": "string", "minLength": 1 },
+        "angle_type": { "enum": ["ENGINEERING_BOUNDARY", "ARCHITECTURE_PATTERN", "LOCAL_BEHAVIOR", "DESIGN_TRADEOFF", "TYPE_SURFACE", "PACKAGE_SURFACE", "EVIDENCE_METHOD", "EDUCATIONAL_INSIGHT", "UNUSUAL_IMPLEMENTATION"] },
+        "canonical_grounded_brief_version": { "const": 1 },
+        "editorial_thesis": { "type": "string", "minLength": 1 },
+        "why_interesting": { "type": "string", "minLength": 1 },
+        "target_audience": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["DEVELOPER", "AI_ENGINEER", "OPEN_SOURCE_MAINTAINER", "TECH_CREATOR", "GENERAL_TECH"] } },
+        "editorial_strength": { "enum": ["WEAK", "USEFUL", "STRONG"] },
+        "editorial_scores": { "$ref": "urn:repo-artifact:schema:content-angle:v2#/$defs/editorialScores" },
+        "known_caveats": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "host_validation": { "type": "object", "additionalProperties": false, "required": ["status", "decision_codes"], "properties": { "status": { "const": "PASS" }, "decision_codes": { "type": "array", "minItems": 1, "maxItems": 1, "items": { "const": "ALL_HARD_GATES_PASSED" } } } }
+      }
+    },
+    "factView": {
+      "type": "object", "additionalProperties": false,
+      "required": ["model_fact_ref", "canonical_fact_summary", "fact_category", "evidence_strength", "evidence_available", "known_limitations"],
+      "properties": {
+        "model_fact_ref": { "$ref": "#/$defs/factRef" },
+        "canonical_fact_summary": { "type": "string", "minLength": 1 },
+        "fact_category": { "enum": ["STRUCTURAL", "BEHAVIORAL", "CONFIGURATION", "TYPE", "RELATION"] },
+        "evidence_strength": { "const": "VERIFIED" },
+        "evidence_available": { "const": true },
+        "known_limitations": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "relatedOption": {
+      "type": "object", "additionalProperties": false,
+      "required": ["model_fact_ref", "canonical_fact_summary", "fact_category", "related_to_base_fact_refs", "relation_reason", "relation_distance", "evidence_strength", "evidence_available", "known_limitations"],
+      "properties": {
+        "model_fact_ref": { "$ref": "#/$defs/factRef" },
+        "canonical_fact_summary": { "type": "string", "minLength": 1 },
+        "fact_category": { "enum": ["STRUCTURAL", "BEHAVIORAL", "CONFIGURATION", "TYPE", "RELATION"] },
+        "related_to_base_fact_refs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/factRef" } },
+        "relation_reason": { "$ref": "#/$defs/relation" },
+        "relation_distance": { "enum": ["DIRECT", "ONE_HOP"] },
+        "evidence_strength": { "const": "VERIFIED" },
+        "evidence_available": { "const": true },
+        "known_limitations": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "knownUnknown": { "type": "object", "additionalProperties": false, "required": ["unknown_ref", "statement", "evidence_needed"], "properties": { "unknown_ref": { "$ref": "#/$defs/gapRef" }, "statement": { "type": "string", "minLength": 1 }, "evidence_needed": { "type": "string", "minLength": 1 } } },
+    "referenceEntry": {
+      "type": "object", "additionalProperties": false,
+      "required": ["model_fact_ref", "role", "canonical_fact_id", "repository", "commit", "fact_ir_version", "evidence_ids"],
+      "properties": {
+        "model_fact_ref": { "$ref": "#/$defs/factRef" },
+        "role": { "enum": ["BASE_FACT", "RELATED_FACT_OPTION"] },
+        "canonical_fact_id": { "type": "string", "minLength": 1 },
+        "repository": { "$ref": "urn:repo-artifact:schema:grounded-fact-pack:v1#/$defs/repository" },
+        "commit": { "$ref": "#/$defs/commit" },
+        "fact_ir_version": { "const": 1 },
+        "evidence_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "zeroExecution": { "type": "object", "additionalProperties": false, "required": ["mode", "paid_api_requests", "real_model_requests", "secret_reads", "repository_executions"], "properties": { "mode": { "const": "deterministic_offline_refinement_context" }, "paid_api_requests": { "const": 0 }, "real_model_requests": { "const": 0 }, "secret_reads": { "const": 0 }, "repository_executions": { "const": 0 } } }
+  }
+}

@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:repo-artifact:schema:canonical-grounded-brief:v1",
+  "title": "CanonicalGroundedBrief",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "canonical_grounded_brief_version",
+    "status",
+    "repository",
+    "commit",
+    "fact_ir_version",
+    "brief_contract_version",
+    "brief_plan_version",
+    "selection_policy_version",
+    "generation_mode",
+    "selected_fact_ids",
+    "statement_to_fact_trace",
+    "fact_to_evidence_trace",
+    "known_unknowns",
+    "limitations",
+    "brief",
+    "acceptance",
+    "source_artifacts",
+    "downstream_truth_source"
+  ],
+  "properties": {
+    "canonical_grounded_brief_version": { "const": 1 },
+    "status": { "const": "ACCEPTED" },
+    "repository": {
+      "$ref": "urn:repo-artifact:schema:grounded-fact-pack:v1#/$defs/repository"
+    },
+    "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "fact_ir_version": { "enum": [1, 2] },
+    "brief_contract_version": { "const": 1 },
+    "brief_plan_version": { "const": 1 },
+    "selection_policy_version": { "const": 1 },
+    "generation_mode": { "const": "deterministic" },
+    "selected_fact_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "statement_to_fact_trace": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/statementFactTrace" }
+    },
+    "fact_to_evidence_trace": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/factEvidenceTrace" }
+    },
+    "known_unknowns": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:repo-artifact:schema:grounded-brief:v1#/$defs/unknown"
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "brief": { "$ref": "urn:repo-artifact:schema:grounded-brief:v1" },
+    "acceptance": { "$ref": "#/$defs/acceptance" },
+    "source_artifacts": { "$ref": "#/$defs/sourceArtifacts" },
+    "downstream_truth_source": { "$ref": "#/$defs/downstreamTruthSource" }
+  },
+  "$defs": {
+    "statementFactTrace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["statement_id", "statement_kind", "fact_ids"],
+      "properties": {
+        "statement_id": { "type": "string", "minLength": 1 },
+        "statement_kind": { "enum": ["TECHNICAL_FACT", "DOCUMENTATION"] },
+        "fact_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "factEvidenceTrace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fact_id", "evidence_ids", "evidence_refs"],
+      "properties": {
+        "fact_id": { "type": "string", "minLength": 1 },
+        "evidence_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "urn:repo-artifact:schema:grounded-fact-pack:v1#/$defs/evidenceRef"
+          }
+        }
+      }
+    },
+    "acceptance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "fact_references",
+        "statement_to_fact_trace",
+        "fact_to_evidence_trace",
+        "unsupported_entities",
+        "predicate_expansions",
+        "scope_expansions",
+        "unsupported_safety_or_outcome",
+        "compound_claim_leakage",
+        "documentation_boundary",
+        "known_unknown_preservation",
+        "repository_commit_binding",
+        "determinism",
+        "technical_utility",
+        "readability"
+      ],
+      "properties": {
+        "schema": { "const": "PASS" },
+        "fact_references": { "const": "PASS" },
+        "statement_to_fact_trace": { "const": "PASS" },
+        "fact_to_evidence_trace": { "const": "PASS" },
+        "unsupported_entities": { "const": 0 },
+        "predicate_expansions": { "const": 0 },
+        "scope_expansions": { "const": 0 },
+        "unsupported_safety_or_outcome": { "const": 0 },
+        "compound_claim_leakage": { "const": 0 },
+        "documentation_boundary": { "const": "PASS" },
+        "known_unknown_preservation": { "const": "PASS" },
+        "repository_commit_binding": { "const": "PASS" },
+        "determinism": { "const": "PASS" },
+        "technical_utility": { "const": "PASS" },
+        "readability": { "const": "PASS" }
+      }
+    },
+    "sourceArtifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["grounded_fact_pack", "brief_plan"],
+      "properties": {
+        "grounded_fact_pack": { "const": "grounded-fact-pack.json" },
+        "brief_plan": { "const": "brief-plan.json" }
+      }
+    },
+    "downstreamTruthSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allowed_inputs",
+        "forbidden_inputs",
+        "content_angle_permissions",
+        "canonical_fact_prohibitions"
+      ],
+      "properties": {
+        "allowed_inputs": {
+          "const": [
+            "grounded_fact_pack",
+            "canonical_grounded_brief",
+            "known_unknowns",
+            "canonical_evidence_when_needed"
+          ]
+        },
+        "forbidden_inputs": {
+          "const": [
+            "raw_llm_brief",
+            "raw_repository",
+            "vs02_model_outputs",
+            "vs03_c_draft",
+            "vs03_c2_draft"
+          ]
+        },
+        "content_angle_permissions": {
+          "const": ["select", "rank", "group", "frame"]
+        },
+        "canonical_fact_prohibitions": {
+          "const": ["create", "upgrade", "rewrite", "replace"]
+        }
+      }
+    }
+  }
+}

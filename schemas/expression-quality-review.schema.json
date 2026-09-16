@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:repo-artifact:schema:expression-quality-review:v1",
+  "title": "ExpressionQualityReview",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["expression_quality_review_version", "basis", "source", "revision", "comparison", "truth_authority", "human_final_copy"],
+  "properties": {
+    "expression_quality_review_version": { "const": 1 },
+    "basis": {
+      "enum": [
+        "QUALITATIVE_OFFLINE_SYNTHETIC_FIXTURE_NOT_TRUTH",
+        "QUALITATIVE_HOST_REVIEW_REAL_MODEL_OUTPUT_NOT_TRUTH"
+      ]
+    },
+    "source": { "$ref": "#/$defs/side" },
+    "revision": { "$ref": "#/$defs/side" },
+    "comparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spoken_naturalness", "audit_language_density", "caveat_burden", "human_story_fidelity"],
+      "properties": {
+        "spoken_naturalness": { "enum": ["IMPROVED", "NOT_IMPROVED"] },
+        "audit_language_density": { "enum": ["REDUCED", "NOT_REDUCED"] },
+        "caveat_burden": { "enum": ["REDUCED", "NOT_REDUCED"] },
+        "human_story_fidelity": { "enum": ["PRESERVED", "NOT_PRESERVED"] }
+      }
+    },
+    "truth_authority": { "const": "NONE" },
+    "human_final_copy": { "const": false }
+  },
+  "$defs": {
+    "level": { "enum": ["HIGH", "MEDIUM", "LOW"] },
+    "dimensions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spoken_naturalness", "sentence_variety", "audit_language_density", "technical_jargon_load", "narrative_flow", "caveat_burden", "developer_relevance", "human_story_fidelity"],
+      "properties": {
+        "spoken_naturalness": { "$ref": "#/$defs/level" },
+        "sentence_variety": { "$ref": "#/$defs/level" },
+        "audit_language_density": { "$ref": "#/$defs/level" },
+        "technical_jargon_load": { "$ref": "#/$defs/level" },
+        "narrative_flow": { "$ref": "#/$defs/level" },
+        "caveat_burden": { "$ref": "#/$defs/level" },
+        "developer_relevance": { "$ref": "#/$defs/level" },
+        "human_story_fidelity": { "$ref": "#/$defs/level" }
+      }
+    },
+    "side": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dimensions", "overall"],
+      "properties": {
+        "dimensions": { "$ref": "#/$defs/dimensions" },
+        "overall": { "enum": ["PASS", "PARTIAL", "FAIL"] }
+      }
+    }
+  }
+}

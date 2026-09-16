@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:repo-artifact:schema:connectivity-exploration:v1",
+  "title": "ConnectivityExploration with TechnicalNeighborhood v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["connectivity_exploration_version", "repository", "commit", "fact_ir_version", "analyzer_version", "status", "connectivity_policy", "neighborhoods", "deduplication", "human_action", "provenance", "exploration_fingerprint_sha256", "generation_metadata"],
+  "properties": {
+    "connectivity_exploration_version": { "const": 1 },
+    "repository": { "$ref": "urn:repo-artifact:schema:grounded-fact-pack:v1#/$defs/repository" },
+    "commit": { "$ref": "#/$defs/commit" },
+    "fact_ir_version": { "enum": [1, 2] },
+    "analyzer_version": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["READY", "NO_TECHNICAL_NEIGHBORHOOD"] },
+    "connectivity_policy": { "$ref": "#/$defs/policy" },
+    "neighborhoods": { "type": "array", "maxItems": 5, "items": { "$ref": "#/$defs/neighborhood" } },
+    "deduplication": {
+      "type": "object", "additionalProperties": false,
+      "required": ["method", "threshold", "candidates_before", "candidates_after", "removed_candidate_ids"],
+      "properties": {
+        "method": { "const": "FACT_OR_ENTITY_JACCARD" },
+        "threshold": { "const": 0.8 },
+        "candidates_before": { "type": "integer", "minimum": 0 },
+        "candidates_after": { "type": "integer", "minimum": 0, "maximum": 5 },
+        "removed_candidate_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/neighborhoodId" } }
+      }
+    },
+    "human_action": {
+      "type": "object", "additionalProperties": false,
+      "required": ["available_action", "automatically_selected", "model_authorized", "script_authorized"],
+      "properties": {
+        "available_action": { "const": "EXPLORE_NEIGHBORHOOD" },
+        "automatically_selected": { "const": false },
+        "model_authorized": { "const": false },
+        "script_authorized": { "const": false }
+      }
+    },
+    "provenance": {
+      "type": "object", "additionalProperties": false, "required": ["fact_pack_artifact"],
+      "properties": { "fact_pack_artifact": { "$ref": "#/$defs/artifactReference" } }
+    },
+    "exploration_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+    "generation_metadata": { "$ref": "#/$defs/zeroExecution" }
+  },
+  "$defs": {
+    "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "neighborhoodId": { "type": "string", "pattern": "^neighborhood_[0-9a-f]{16}$" },
+    "factRef": { "type": "string", "minLength": 1 },
+    "artifactReference": {
+      "type": "object", "additionalProperties": false, "required": ["artifact_path", "sha256"],
+      "properties": { "artifact_path": { "type": "string", "minLength": 1 }, "sha256": { "$ref": "#/$defs/sha256" } }
+    },
+    "policy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "source", "maximum_visible_neighborhoods", "default_maximum_facts_per_neighborhood", "hard_maximum_facts_per_neighborhood", "overlap_threshold", "unresolved_calls_used", "llm_used", "embedding_used", "vector_search_used", "clustered_v2_used", "repository_specific_rules_used", "editorial_score_used"],
+      "properties": {
+        "name": { "const": "DETERMINISTIC_CANONICAL_CONNECTIVITY_V1" },
+        "source": { "const": "CANONICAL_FACT_GRAPH_ONLY" },
+        "maximum_visible_neighborhoods": { "type": "integer", "minimum": 0, "maximum": 5 },
+        "default_maximum_facts_per_neighborhood": { "type": "integer", "minimum": 2, "maximum": 30 },
+        "hard_maximum_facts_per_neighborhood": { "const": 30 },
+        "overlap_threshold": { "const": 0.8 },
+        "unresolved_calls_used": { "const": 0 },
+        "llm_used": { "const": false },
+        "embedding_used": { "const": false },
+        "vector_search_used": { "const": false },
+        "clustered_v2_used": { "const": false },
+        "repository_specific_rules_used": { "const": false },
+        "editorial_score_used": { "const": false }
+      }
+    },
+    "factRefArray": { "type": "array", "maxItems": 30, "uniqueItems": true, "items": { "$ref": "#/$defs/factRef" } },
+    "factView": {
+      "type": "object", "additionalProperties": false,
+      "required": ["fact_ref", "summary", "category", "predicate", "connection_scope", "evidence_ids", "evidence_available", "limitations"],
+      "properties": {
+        "fact_ref": { "$ref": "#/$defs/factRef" },
+        "summary": { "type": "string", "minLength": 1 },
+        "category": { "enum": ["STRUCTURAL", "BEHAVIORAL", "CONFIGURATION", "TYPE", "RELATION"] },
+        "predicate": { "enum": ["DECLARES", "DECLARES_TYPE", "EXPORTS", "IMPORTS", "CALLS", "SKIPS_WHEN", "CONCATENATES_WHEN", "THROWS_WHEN", "DECLARES_CONFIGURATION", "CONTAINS"] },
+        "connection_scope": { "enum": ["CROSS_MODULE", "SAME_MODULE", "NOT_APPLICABLE"] },
+        "evidence_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "evidence_available": { "const": true },
+        "limitations": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "selectionReason": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "connectivity_score", "components", "editorial_score_used"],
+      "properties": {
+        "kind": { "const": "CONNECTIVITY_HEURISTIC_NOT_EDITORIAL_SCORE" },
+        "connectivity_score": { "type": "integer" },
+        "components": {
+          "type": "object", "additionalProperties": false,
+          "required": ["bounded_seed_centrality", "cross_module_edges", "direct_calls", "behavior_presence", "grounded_context_presence", "relation_diversity", "module_coverage", "utility_hotspot_penalty"],
+          "properties": {
+            "bounded_seed_centrality": { "type": "integer", "minimum": 0, "maximum": 6 },
+            "cross_module_edges": { "type": "integer", "minimum": 0, "maximum": 32 },
+            "direct_calls": { "type": "integer", "minimum": 0, "maximum": 16 },
+            "behavior_presence": { "type": "integer", "minimum": 0, "maximum": 24 },
+            "grounded_context_presence": { "enum": [0, 30] },
+            "relation_diversity": { "type": "integer", "minimum": 0, "maximum": 25 },
+            "module_coverage": { "type": "integer", "minimum": 0, "maximum": 15 },
+            "utility_hotspot_penalty": { "enum": [0, -25] }
+          }
+        },
+        "editorial_score_used": { "const": false }
+      }
+    },
+    "neighborhood": {
+      "type": "object", "additionalProperties": false,
+      "required": ["technical_neighborhood_version", "neighborhood_id", "neighborhood_fingerprint_sha256", "neutral_label", "seed_entities", "entity_ids", "fact_refs", "call_fact_refs", "relation_fact_refs", "behavior_fact_refs", "structural_fact_refs", "configuration_fact_refs", "type_fact_refs", "fact_views", "cross_module_edge_count", "direct_call_count", "behavior_fact_count", "module_count", "module_paths", "relation_diversity", "known_unknown_refs", "boundary_notes", "selection_reason", "provenance"],
+      "properties": {
+        "technical_neighborhood_version": { "const": 1 },
+        "neighborhood_id": { "$ref": "#/$defs/neighborhoodId" },
+        "neighborhood_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+        "neutral_label": { "type": "string", "minLength": 1 },
+        "seed_entities": { "type": "array", "minItems": 1, "maxItems": 3, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "entity_ids": { "type": "array", "minItems": 3, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "fact_refs": { "$ref": "#/$defs/factRefArray" },
+        "call_fact_refs": { "$ref": "#/$defs/factRefArray" },
+        "relation_fact_refs": { "$ref": "#/$defs/factRefArray" },
+        "behavior_fact_refs": { "$ref": "#/$defs/factRefArray" },
+        "structural_fact_refs": { "$ref": "#/$defs/factRefArray" },
+        "configuration_fact_refs": { "$ref": "#/$defs/factRefArray" },
+        "type_fact_refs": { "$ref": "#/$defs/factRefArray" },
+        "fact_views": { "type": "array", "maxItems": 30, "items": { "$ref": "#/$defs/factView" } },
+        "cross_module_edge_count": { "type": "integer", "minimum": 0 },
+        "direct_call_count": { "type": "integer", "minimum": 2, "maximum": 30 },
+        "behavior_fact_count": { "type": "integer", "minimum": 0, "maximum": 30 },
+        "module_count": { "type": "integer", "minimum": 1 },
+        "module_paths": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "relation_diversity": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "known_unknown_refs": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^gap_[a-z0-9_]+$" } },
+        "boundary_notes": { "type": "array", "minItems": 3, "items": { "type": "string", "minLength": 1 } },
+        "selection_reason": { "$ref": "#/$defs/selectionReason" },
+        "provenance": {
+          "type": "object", "additionalProperties": false,
+          "required": ["repository", "commit", "fact_ir_version", "analyzer_version", "fact_pack_artifact", "connectivity_policy"],
+          "properties": {
+            "repository": { "$ref": "urn:repo-artifact:schema:grounded-fact-pack:v1#/$defs/repository" },
+            "commit": { "$ref": "#/$defs/commit" },
+            "fact_ir_version": { "enum": [1, 2] },
+            "analyzer_version": { "type": "string", "minLength": 1 },
+            "fact_pack_artifact": { "$ref": "#/$defs/artifactReference" },
+            "connectivity_policy": { "const": "DETERMINISTIC_CANONICAL_CONNECTIVITY_V1" }
+          }
+        }
+      }
+    },
+    "zeroExecution": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "paid_api_requests", "real_model_requests", "secret_reads", "repository_executions"],
+      "properties": {
+        "mode": { "const": "deterministic_offline_connectivity_exploration" },
+        "paid_api_requests": { "const": 0 },
+        "real_model_requests": { "const": 0 },
+        "secret_reads": { "const": 0 },
+        "repository_executions": { "const": 0 }
+      }
+    }
+  }
+}

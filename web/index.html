@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="查看公开 GitHub 项目的用途、使用方法、代码结构和来源引用。"
+    />
+    <title>仓库解读 — GitHub 项目分析</title>
+    <link rel="stylesheet" href="/app.css" />
+    <script src="/app.js" type="module"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#workspace" data-i18n="skipToWorkbench">跳到分析工作台</a>
+
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="仓库解读首页" data-i18n-aria-label="homeLabel">
+        <span class="brand-mark" aria-hidden="true">R/A</span>
+        <span>
+          <strong data-i18n="brandName">仓库解读</strong>
+          <small data-i18n="brandTagline">GitHub 项目分析</small>
+        </span>
+      </a>
+      <div class="header-tools">
+        <nav aria-label="页面导航" data-i18n-aria-label="pageNavigation">
+          <a href="#method" data-i18n="navMethod">报告说明</a>
+          <a href="#boundary" data-i18n="navBoundary">使用须知</a>
+          <span class="version-chip" data-i18n="versionLocal">V0.2 本地版</span>
+        </nav>
+        <div class="language-switch" id="language-switch" role="group" aria-label="语言 / Language">
+          <button type="button" data-locale="zh-CN" aria-pressed="true">中文</button>
+          <button type="button" data-locale="en" aria-pressed="false">EN</button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" id="workspace">
+        <header class="workspace-heading">
+          <p class="eyebrow" data-i18n="heroEyebrow">GitHub 项目分析</p>
+          <h1><span class="hero-line" data-i18n="heroLineOne">了解一个项目，</span><span data-i18n="heroLineTwo">从这里开始</span></h1>
+          <p class="hero-intro" data-i18n="heroIntro">贴入公开仓库地址，查看项目用途、上手方法和代码结构。报告附有来源，方便你回到原文继续读。</p>
+
+        </header>
+        <div class="workspace-grid">
+        <div class="hero-copy">
+          <form class="analyze-form" id="analyze-form" novalidate>
+            <label for="repository-url" data-i18n="repositoryLabel">公开 GitHub 仓库地址</label>
+            <div class="input-row">
+              <input
+                id="repository-url"
+                name="repository-url"
+                type="url"
+                inputmode="url"
+                autocomplete="url"
+                spellcheck="false"
+                placeholder="https://github.com/owner/repository"
+                required
+              />
+              <button class="primary-button" type="submit" id="analyze-button">
+                <span data-i18n="analyzeButton">开始分析</span>
+                <span aria-hidden="true">→</span>
+              </button>
+            </div>
+            <section class="connection-workbench" aria-labelledby="connection-heading">
+              <header class="connection-heading">
+                <div>
+                  <span data-i18n="connectionEyebrow">本次分析</span>
+                  <h2 id="connection-heading" data-i18n="connectionHeading">分析设置</h2>
+                </div>
+                <p data-i18n="credentialPrivacy">初次使用保持默认即可，无需填写密钥。</p>
+              </header>
+              <div class="connection-grid">
+                <fieldset class="credential-card">
+                  <legend><b data-i18n="githubReadLegend">仓库访问</b></legend>
+                  <p data-i18n="githubReadIntro">公开仓库可直接读取。遇到 GitHub 访问限额时，可填入自己的 Token（访问凭证）。</p>
+                  <label for="github-access-mode" data-i18n="accessModeLabel">访问方式</label>
+                  <select id="github-access-mode">
+                    <option value="anonymous" data-i18n="anonymousOption">匿名访问（无需 Token）</option>
+                    <option value="token" data-i18n="tokenOption">使用自己的 GitHub Token</option>
+                  </select>
+                  <div class="github-token-controls" id="github-token-controls" hidden>
+                    <label for="github-token">GitHub Token</label>
+                    <div class="secret-row">
+                      <input
+                        id="github-token"
+                        type="password"
+                        autocomplete="new-password"
+                        spellcheck="false"
+                        placeholder="ghp_… / github_pat_…"
+                        disabled
+                      />
+                      <button class="utility-button" type="button" id="clear-github" data-i18n="clearButton">清空</button>
+                    </div>
+                  </div>
+                  <button class="utility-button credential-test-button" type="button" id="test-github" data-i18n="testCurrentMode">测试当前方式</button>
+                  <p class="connection-status" id="github-status" aria-live="polite">
+                    <span data-i18n="checkingConnection">正在检查本机连接配置…</span>
+                  </p>
+                </fieldset>
+
+                <fieldset class="credential-card">
+                  <legend><b data-i18n="reportModeLegend">报告方式</b></legend>
+                  <label for="provider-select" data-i18n="analysisModeLabel">分析模式</label>
+                  <select id="provider-select">
+                    <option value="deterministic" data-i18n="deterministicOption">免费分析（不调用模型）</option>
+                    <option value="custom" id="ai-mode-option">AI 分析（自选供应商）</option>
+                  </select>
+                  <div class="deepseek-controls" id="ai-controls" hidden>
+                    <label for="connection-select" id="connection-select-label">模型供应商</label>
+                    <div class="connection-picker"><select id="connection-select"></select><button type="button" id="manage-providers" class="utility-button">管理供应商</button></div>
+                    <p id="connection-empty" class="field-note">还没有供应商。点击“管理供应商”添加自己的 API 接点。</p>
+                    <label for="connection-model" id="connection-model-label">模型</label>
+                    <select id="connection-model"></select>
+                    <p class="field-note" id="connection-destination"></p>
+                    <label for="connection-api-key">API Key</label>
+                    <div class="secret-row connection-key-row"><input id="connection-api-key" type="password" autocomplete="new-password" spellcheck="false" maxlength="1024" /><button type="button" id="clear-connection-key" class="utility-button" data-i18n="clearButton">清空</button></div>
+                    <label class="consent-row" for="paid-model-consent">
+                      <input id="paid-model-consent" type="checkbox" />
+                      <span id="custom-paid-consent">我知道仓库文本会发送给所选供应商，并消耗我的 API 余额。</span>
+                    </label>
+                    <p class="connection-status" id="connection-status" aria-live="polite"></p>
+                  </div>
+                </fieldset>
+              </div>
+              <div class="custody-rail" role="note" aria-label="密钥使用说明" data-i18n-aria-label="credentialLifecycle">
+                <span data-i18n="browserMemory">密钥仅留在页面内存</span><i aria-hidden="true">·</i><span data-i18n="oneLocalRequest">不写入报告或日志</span><i aria-hidden="true">·</i><span data-i18n="discardAfterRequest">刷新页面后需重新填写</span>
+              </div>
+            </section>
+            <div class="form-foot">
+              <button class="text-button" type="button" id="example-button">
+                <span data-i18n="fillExample">试填一个示例</span>
+              </button>
+              <p id="mode-summary">当前：免费确定性分析，不调用付费模型，不执行目标仓库代码。</p>
+            </div>
+          </form>
+        </div>
+
+        <aside class="trace-card" aria-label="报告内容说明" data-i18n-aria-label="traceLabel">
+          <div class="trace-heading">
+            <span data-i18n="traceHeading">报告里有什么</span>
+            <span class="live-dot" data-i18n="localLabel">含来源</span>
+          </div>
+          <ul class="trace-rail">
+            <li>
+              <span class="trace-index" aria-hidden="true">README</span>
+              <div><strong data-i18n="tracePin">项目介绍</strong><small data-i18n="tracePinNote">做什么、适合谁、怎样开始使用</small></div>
+            </li>
+            <li>
+              <span class="trace-index" aria-hidden="true">MAP</span>
+              <div><strong data-i18n="traceExtract">代码结构</strong><small data-i18n="traceExtractNote">主要模块，以及能确认的依赖关系</small></div>
+            </li>
+            <li>
+              <span class="trace-index" aria-hidden="true">SOURCE</span>
+              <div><strong data-i18n="traceVerify">来源引用</strong><small data-i18n="traceVerifyNote">查看对应的文件和代码位置</small></div>
+            </li>
+            <li>
+              <span class="trace-index" aria-hidden="true">EXPORT</span>
+              <div><strong data-i18n="traceOrganize">可下载的报告</strong><small data-i18n="traceOrganizeNote">保存说明、结构图和分析数据</small></div>
+            </li>
+          </ul>
+          <p class="trace-note" data-i18n="traceFailureNote">免费模式整理文档和代码信息；AI 模式在此基础上补充解读，需要配置自己的模型供应商。</p>
+        </aside>
+        </div>
+      </section>
+
+      <section class="run-state" id="run-state" hidden aria-live="polite" aria-busy="true">
+        <div class="run-orbit" aria-hidden="true"><span></span></div>
+        <div>
+          <p class="eyebrow" data-i18n="analyzingEyebrow">正在分析</p>
+          <h2 data-i18n="analyzingHeading">正在读取仓库</h2>
+          <p id="run-message" data-i18n="analyzingMessage">正在整理文档、代码和引用。完成检查后，报告会显示在这里。</p>
+          <p class="elapsed"><span id="elapsed-time">0</span> <span data-i18n="secondsUnit">秒</span></p>
+        </div>
+      </section>
+
+      <section class="error-panel" id="error-panel" hidden role="alert">
+        <span class="error-code" id="error-code">ANALYSIS_FAILED</span>
+        <div>
+          <h2 data-i18n="errorHeading">未能完成分析</h2>
+          <p id="error-message"></p>
+        </div>
+        <button class="secondary-button" type="button" id="retry-button" data-i18n="retryButton">返回检查设置</button>
+      </section>
+
+      <section class="result-shell" id="result-shell" hidden aria-live="polite">
+        <header class="result-header">
+          <div>
+            <p class="eyebrow" id="result-kicker">固定提交的分析结果</p>
+            <h2 id="project-name"></h2>
+            <p id="project-sentence" class="result-sentence"></p>
+          </div>
+          <div class="gate-stamp">
+            <span data-i18n="qualityGate">报告检查</span>
+            <strong data-i18n="passed">通过</strong>
+            <small id="commit-short"></small>
+          </div>
+        </header>
+
+        <div class="fallback-notice" id="fallback-notice" hidden role="status">
+          <span class="fallback-route" aria-hidden="true">AI → BASE</span>
+          <div>
+            <strong data-i18n="fallbackHeading">AI 分析未完成，以下为免费报告</strong>
+            <p id="fallback-message"></p>
+          </div>
+          <span class="fallback-stage" id="fallback-stage"></span>
+        </div>
+
+        <div class="report-language-notice" id="report-language-notice" hidden role="status">
+          <strong id="report-language-heading"></strong>
+          <p id="report-language-message"></p>
+        </div>
+
+        <div class="analysis-mode-notice" id="generic-mode-notice" hidden role="status">
+          <strong data-i18n="genericModeHeading">本次使用通用文本模式</strong>
+          <p data-i18n="genericModeMessage">本次按通用方式读取 README、配置和部分源码。非 JavaScript/TypeScript 文件仅做文本分析，不提供其函数和跨文件调用关系。</p>
+        </div>
+
+        <nav class="result-nav" aria-label="分析结果导航" data-i18n-aria-label="resultNavigation">
+          <a href="#overview" data-i18n="navOverview">概览</a>
+          <a href="#architecture" data-i18n="navArchitecture">架构</a>
+          <a href="#evidence" data-i18n="navEvidence">证据</a>
+          <a href="#content-pack" data-i18n="navContent">延伸阅读</a>
+          <a href="#downloads" data-i18n="navDownloads">下载</a>
+        </nav>
+
+        <div class="result-grid">
+          <div class="result-main">
+            <section class="result-section" id="overview">
+              <div class="section-heading">
+                <p class="eyebrow" data-i18n="overviewEyebrow">项目概览</p>
+                <h3 data-i18n="overviewHeading">它做什么</h3>
+              </div>
+              <p class="guide-label" data-i18n="guideBasis">文档与仓库信息 · 不代表已验证运行效果</p>
+              <p class="lead-copy" id="project-summary"></p>
+              <div class="guide-sources" id="guide-sources"></div>
+              <div class="guide-interpretation" id="guide-interpretation" hidden>
+                <h4 data-i18n="guideInterpretation">AI 详细解读 · 需结合原文核对</h4>
+                <p id="guide-model-summary"></p>
+              </div>
+              <div class="overview-columns">
+                <div>
+                  <h4 data-i18n="problemHeading">解决的问题</h4>
+                  <p class="guide-label" id="problem-basis"></p>
+                  <p id="project-problem"></p>
+                </div>
+                <div>
+                  <h4 data-i18n="audienceHeading">适合谁</h4>
+                  <p class="guide-label" id="audience-basis"></p>
+                  <div class="tag-list" id="target-users"></div>
+                </div>
+                <div>
+                  <h4 data-i18n="technologyHeading">技术组成</h4>
+                  <div class="tag-list" id="technologies"></div>
+                </div>
+              </div>
+              <div class="guide-details">
+                <section><h4 data-i18n="guideFeatures">主要功能与特点</h4><ul id="guide-features"></ul></section>
+                <section><h4 data-i18n="guideUsage">怎样开始使用</h4><ul id="guide-usage"></ul></section>
+                <section><h4 data-i18n="guideCaveats">使用前注意</h4><ul id="guide-caveats"></ul></section>
+              </div>
+              <p class="guide-coverage" id="guide-coverage"></p>
+            </section>
+
+            <section class="result-section" id="architecture">
+              <div class="section-heading heading-with-meta">
+                <div>
+                  <p class="eyebrow" data-i18n="architectureEyebrow">架构关系</p>
+                  <h3 data-i18n="architectureHeading">模块如何连接</h3>
+                </div>
+                <span id="relationship-count" class="section-count"></span>
+              </div>
+              <div class="architecture-guide">
+                <p data-i18n="architectureGuide">阅读方式：A → B 表示 A 在代码中导入或直接调用 B。这里只优先展示跨文件连接；同一文件内部的小调用合并到统计里。</p>
+                <div class="relationship-summary" id="relationship-summary"></div>
+              </div>
+              <div class="module-map" id="module-map"></div>
+              <div class="relationship-list" id="relationship-list"></div>
+              <details class="raw-details">
+                <summary data-i18n="viewMermaid">查看 Mermaid 原始图</summary>
+                <pre id="mermaid-source"></pre>
+              </details>
+            </section>
+
+            <section class="result-section" id="evidence">
+              <div class="section-heading heading-with-meta">
+                <div>
+                  <p class="eyebrow" data-i18n="evidenceEyebrow">证据清单</p>
+                  <h3 data-i18n="evidenceHeading">结论从哪里来</h3>
+                </div>
+                <span id="evidence-count" class="section-count"></span>
+              </div>
+              <label class="evidence-search">
+                <span data-i18n="filterEvidence">筛选证据</span>
+                <input id="evidence-filter" type="search" placeholder="输入文件名、结论或证据 ID" data-i18n-placeholder="evidencePlaceholder" />
+              </label>
+              <div class="evidence-list" id="evidence-list"></div>
+              <p class="empty-message" id="evidence-empty" hidden data-i18n="evidenceEmpty">没有与这个关键词匹配的证据。</p>
+              <div class="evidence-actions">
+                <span id="evidence-showing"></span>
+                <button class="secondary-button" type="button" id="evidence-more" data-i18n="showMoreEvidence">显示更多证据</button>
+              </div>
+            </section>
+
+            <section class="result-section" id="content-pack">
+              <div class="section-heading">
+                <p class="eyebrow" data-i18n="contentEyebrow">深入了解</p>
+                <h3 data-i18n="contentHeading">可以进一步看的地方</h3>
+              </div>
+              <p class="content-explainer" data-i18n="contentExplainer">以下内容来自本次读取的源码，可作为继续阅读的线索。</p>
+              <div id="angle-list" class="angle-list"></div>
+            </section>
+
+            <section class="result-section" id="limits">
+              <div class="section-heading">
+                <p class="eyebrow" data-i18n="limitsEyebrow">阅读提醒</p>
+                <h3 data-i18n="limitsHeading">本次分析的限制</h3>
+              </div>
+              <div class="boundary-columns">
+                <div>
+                  <h4 data-i18n="limitationsHeading">分析限制</h4>
+                  <ul id="limitations-list"></ul>
+                </div>
+                <div>
+                  <h4 data-i18n="unknownsHeading">待验证问题</h4>
+                  <ul id="unknowns-list"></ul>
+                </div>
+              </div>
+            </section>
+
+            <section class="result-section downloads-section" id="downloads">
+              <div class="section-heading">
+                <p class="eyebrow" data-i18n="artifactsEyebrow">下载</p>
+                <h3 data-i18n="artifactsHeading">保存分析结果</h3>
+              </div>
+              <p id="artifact-directory" class="artifact-path"></p>
+              <div class="download-list" id="download-list"></div>
+              <button class="secondary-button" type="button" id="download-summary" data-i18n="downloadJson">下载当前结果 JSON</button>
+            </section>
+          </div>
+
+          <aside class="result-aside" aria-label="分析摘要" data-i18n-aria-label="analysisSummaryLabel">
+            <div class="aside-block repository-block">
+              <span class="aside-label" data-i18n="repositoryAside">仓库</span>
+              <a id="repository-link" target="_blank" rel="noreferrer"></a>
+              <code id="commit-full"></code>
+            </div>
+            <dl class="metric-list">
+              <div><dt data-i18n="filesSeen">已发现文件</dt><dd id="files-seen">—</dd></div>
+              <div><dt data-i18n="filesRead">实际读取</dt><dd id="files-read">—</dd></div>
+              <div><dt data-i18n="evidenceRecords">证据记录</dt><dd id="evidence-total">—</dd></div>
+              <div><dt data-i18n="coreModules">核心模块</dt><dd id="module-total">—</dd></div>
+              <div><dt data-i18n="analysisDuration">分析耗时</dt><dd id="duration">—</dd></div>
+              <div><dt data-i18n="analysisModeMetric">分析模式</dt><dd id="provider-used">—</dd></div>
+              <div><dt data-i18n="modelUsage">模型用量</dt><dd id="model-usage">—</dd></div>
+              <div><dt data-i18n="repositoryExecution">仓库执行</dt><dd>0</dd></div>
+            </dl>
+            <div class="aside-block gate-list-block">
+              <span class="aside-label" data-i18n="criticalGates">检查记录</span>
+              <ul id="gate-list"></ul>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="method-section" id="method">
+        <header>
+          <p class="eyebrow" data-i18n="methodEyebrow">报告说明</p>
+          <h2><span data-i18n="methodLineOne">这份报告</span><span data-i18n="methodLineTwo">是怎么来的</span></h2>
+        </header>
+        <div class="method-grid">
+          <article><span data-i18n="methodReadLabel">01</span><h3 data-i18n="methodReadHeading">读取仓库</h3><p data-i18n="methodReadBody">记录本次提交版本，读取 README、配置和部分源码。大仓库不一定会读完。</p></article>
+          <article><span data-i18n="methodBindLabel">02</span><h3 data-i18n="methodBindHeading">整理来源</h3><p data-i18n="methodBindBody">将代码事实对应到文件和代码位置。文档介绍与 AI 解读会分别标注。</p></article>
+          <article><span data-i18n="methodVerifyLabel">03</span><h3 data-i18n="methodVerifyHeading">检查结果</h3><p data-i18n="methodVerifyBody">核对报告格式、引用和代码关系。检查通过不代表项目已运行或 AI 解读完全正确。</p></article>
+          <article><span data-i18n="methodDeliverLabel">04</span><h3 data-i18n="methodDeliverHeading">生成报告</h3><p data-i18n="methodDeliverBody">在页面阅读，也可下载 Markdown 说明、JSON 数据和 Mermaid 结构图。</p></article>
+        </div>
+      </section>
+
+      <section class="boundary-section" id="boundary">
+        <p class="eyebrow" data-i18n="boundaryEyebrow">使用须知</p>
+        <h2 data-i18n="boundaryHeading">分析前，了解这几点</h2>
+        <p data-i18n="boundaryBody">目前只支持公开 GitHub 仓库。报告用于了解项目，不代替安装测试或安全审计。</p>
+        <div class="usage-grid">
+          <article><h3 data-i18n="scopeHeading">不会运行仓库代码</h3><p data-i18n="scopeBody">只读取文本，不克隆仓库、不安装依赖，也不执行脚本或测试。仓库内容不会被当作操作指令。</p></article>
+          <article><h3 data-i18n="privacyHeading">密钥由你保管</h3><p data-i18n="privacyBody">连接配置保存在当前浏览器；你填写的密钥只留在页面内存，不写入报告或日志，刷新后需重新填写。</p></article>
+          <article><h3 data-i18n="costHeading">AI 分析单独计费</h3><p data-i18n="costBody">使用 AI 时，仓库文本会发送给所选供应商，由你的 API 账户付费。模型生成失败时回退到免费报告，不自动付费重试。</p></article>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span data-i18n="footerBrand">仓库解读 · V0.2 本地版</span>
+      <span data-i18n="footerSafety">仅支持公开 GitHub 仓库</span>
+    </footer>
+
+    <dialog id="provider-dialog" aria-labelledby="provider-dialog-title">
+      <div class="provider-manager">
+        <aside class="provider-sidebar">
+          <h2 id="provider-list-heading">我的模型供应商</h2>
+          <div id="provider-list" role="group" aria-label="供应商列表"></div>
+          <button type="button" class="utility-button provider-add" id="new-provider">＋ 添加供应商</button>
+          <p id="provider-storage-note">只记住连接配置，密钥不保存。</p>
+        </aside>
+        <section class="provider-editor">
+          <button type="button" id="close-provider-dialog" aria-label="关闭" class="provider-close">×</button>
+          <h2 id="provider-dialog-title">添加模型供应商</h2>
+          <p id="provider-dialog-intro">配置自己的 API 端点与模型，不限定供应商品牌。</p>
+          <form id="provider-editor-form">
+            <label for="provider-name" id="provider-name-label">名称</label>
+            <input id="provider-name" required maxlength="80" autocomplete="off" placeholder="如：我的 Kimi / Claude / 自建中转" />
+            <label for="provider-base-url">Base URL</label>
+            <input id="provider-base-url" type="url" required maxlength="500" autocomplete="off" spellcheck="false" placeholder="https://api.example.com/v1" />
+            <p class="field-note" id="provider-url-help">填写 API 基础地址，不含 /chat/completions 或 /messages；仅支持公网 HTTPS。</p>
+            <label for="provider-editor-key">API Key</label>
+            <input id="provider-editor-key" type="password" maxlength="1024" autocomplete="new-password" spellcheck="false" placeholder="输入自己的 API Key（仅保留在本次页面内存）" />
+            <label for="provider-api-format" id="provider-format-label">API 格式</label>
+            <select id="provider-api-format"><option value="openai-chat">OpenAI Chat Completions (/chat/completions)</option><option value="anthropic-messages">Anthropic Messages (/v1/messages)</option></select>
+            <div id="provider-models-heading">模型列表</div>
+            <div id="provider-model-rows"></div>
+            <button class="utility-button" type="button" id="add-provider-model">＋ 添加模型</button>
+            <details id="provider-advanced"><summary id="provider-advanced-label">兼容性选项（通常无需修改）</summary>
+              <label for="provider-token-parameter" id="provider-token-label">输出上限参数</label>
+              <select id="provider-token-parameter"><option value="max_tokens">max_tokens</option><option value="max_completion_tokens">max_completion_tokens</option></select>
+              <label class="consent-row"><input type="checkbox" id="provider-json-mode" checked /><span id="provider-json-label">发送 JSON 模式参数（不兼容时可关闭，本地仍验证结果）</span></label>
+            </details>
+            <p id="provider-editor-status" class="connection-status" role="status"></p>
+            <div class="provider-editor-footer">
+              <button type="button" id="delete-provider" class="utility-button" hidden>删除供应商</button>
+              <button type="button" id="check-provider" class="utility-button">检查配置</button>
+              <button type="submit" id="save-provider" class="provider-save">添加供应商</button>
+            </div>
+            <p class="field-note" id="provider-check-note">检查配置不会调用模型，也不代表密钥有效；开始分析前需另行确认费用。</p>
+          </form>
+        </section>
+      </div>
+    </dialog>
+    <noscript>这个本地工作台需要启用 JavaScript 才能提交分析请求和展示结果。 This local workbench requires JavaScript.</noscript>
+  </body>
+</html>

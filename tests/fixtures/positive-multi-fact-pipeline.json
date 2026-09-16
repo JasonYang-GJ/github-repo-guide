@@ -1,0 +1,180 @@
+{
+  "fact_ir_version": 1,
+  "repository": {
+    "url": "https://github.com/example/structured-pipeline",
+    "owner": "example",
+    "name": "structured-pipeline"
+  },
+  "commit": "1111111111111111111111111111111111111111",
+  "entities": [
+    {
+      "id": "entity_module_producer",
+      "kind": "module",
+      "display_label": "src/producer.ts",
+      "source_path": "src/producer.ts",
+      "evidence_ids": []
+    },
+    {
+      "id": "entity_symbol_create_structured_object",
+      "kind": "symbol",
+      "display_label": "createStructuredObject",
+      "source_path": "src/producer.ts",
+      "evidence_ids": []
+    },
+    {
+      "id": "entity_module_validator",
+      "kind": "module",
+      "display_label": "src/validator.ts",
+      "source_path": "src/validator.ts",
+      "evidence_ids": []
+    },
+    {
+      "id": "entity_symbol_validate_structured_object",
+      "kind": "symbol",
+      "display_label": "validateStructuredObject",
+      "source_path": "src/validator.ts",
+      "evidence_ids": []
+    },
+    {
+      "id": "entity_module_renderer",
+      "kind": "module",
+      "display_label": "src/renderer.ts",
+      "source_path": "src/renderer.ts",
+      "evidence_ids": []
+    },
+    {
+      "id": "entity_symbol_render_structured_object",
+      "kind": "symbol",
+      "display_label": "renderStructuredObject",
+      "source_path": "src/renderer.ts",
+      "evidence_ids": []
+    }
+  ],
+  "facts": [
+    {
+      "id": "fact_producer_declares_create",
+      "fact_type": "DECLARATION",
+      "category": "STRUCTURAL",
+      "subject_ref": "entity_module_producer",
+      "predicate": "DECLARES",
+      "object_ref": "entity_symbol_create_structured_object",
+      "scope": "MODULE",
+      "evidence_ids": [],
+      "source_kind": "source",
+      "verification": { "status": "verified", "confidence": 1 },
+      "qualifiers": [],
+      "limitations": [],
+      "provenance": {
+        "repository": {
+          "url": "https://github.com/example/structured-pipeline",
+          "commit_sha": "1111111111111111111111111111111111111111"
+        },
+        "extractor": "deterministic-evidence-to-fact-v1",
+        "evidence_ids": []
+      }
+    },
+    {
+      "id": "fact_validator_imports_producer",
+      "fact_type": "IMPORT_RELATION",
+      "category": "RELATION",
+      "subject_ref": "entity_module_validator",
+      "predicate": "IMPORTS",
+      "object_ref": "entity_module_producer",
+      "scope": "MODULE",
+      "evidence_ids": [],
+      "source_kind": "source",
+      "verification": { "status": "verified", "confidence": 1 },
+      "qualifiers": [],
+      "limitations": [
+        "A static import does not prove a runtime call sequence."
+      ],
+      "provenance": {
+        "repository": {
+          "url": "https://github.com/example/structured-pipeline",
+          "commit_sha": "1111111111111111111111111111111111111111"
+        },
+        "extractor": "deterministic-evidence-to-fact-v1",
+        "evidence_ids": []
+      }
+    },
+    {
+      "id": "fact_validator_declares_validate",
+      "fact_type": "DECLARATION",
+      "category": "STRUCTURAL",
+      "subject_ref": "entity_module_validator",
+      "predicate": "DECLARES",
+      "object_ref": "entity_symbol_validate_structured_object",
+      "scope": "MODULE",
+      "evidence_ids": [],
+      "source_kind": "source",
+      "verification": { "status": "verified", "confidence": 1 },
+      "qualifiers": [],
+      "limitations": [],
+      "provenance": {
+        "repository": {
+          "url": "https://github.com/example/structured-pipeline",
+          "commit_sha": "1111111111111111111111111111111111111111"
+        },
+        "extractor": "deterministic-evidence-to-fact-v1",
+        "evidence_ids": []
+      }
+    },
+    {
+      "id": "fact_renderer_imports_validator",
+      "fact_type": "IMPORT_RELATION",
+      "category": "RELATION",
+      "subject_ref": "entity_module_renderer",
+      "predicate": "IMPORTS",
+      "object_ref": "entity_module_validator",
+      "scope": "MODULE",
+      "evidence_ids": [],
+      "source_kind": "source",
+      "verification": { "status": "verified", "confidence": 1 },
+      "qualifiers": [],
+      "limitations": [
+        "A static import does not prove a runtime call sequence."
+      ],
+      "provenance": {
+        "repository": {
+          "url": "https://github.com/example/structured-pipeline",
+          "commit_sha": "1111111111111111111111111111111111111111"
+        },
+        "extractor": "deterministic-evidence-to-fact-v1",
+        "evidence_ids": []
+      }
+    },
+    {
+      "id": "fact_renderer_declares_render",
+      "fact_type": "DECLARATION",
+      "category": "STRUCTURAL",
+      "subject_ref": "entity_module_renderer",
+      "predicate": "DECLARES",
+      "object_ref": "entity_symbol_render_structured_object",
+      "scope": "MODULE",
+      "evidence_ids": [],
+      "source_kind": "source",
+      "verification": { "status": "verified", "confidence": 1 },
+      "qualifiers": [],
+      "limitations": [],
+      "provenance": {
+        "repository": {
+          "url": "https://github.com/example/structured-pipeline",
+          "commit_sha": "1111111111111111111111111111111111111111"
+        },
+        "extractor": "deterministic-evidence-to-fact-v1",
+        "evidence_ids": []
+      }
+    }
+  ],
+  "evidence_refs": [],
+  "unsupported_areas": [
+    {
+      "id": "gap_call_relations",
+      "reason": "Static imports do not prove resolved calls.",
+      "evidence_needed": "A symbol-resolved call graph."
+    }
+  ],
+  "limitations": [
+    "The fixture verifies deterministic organization, not a generated editorial angle."
+  ]
+}

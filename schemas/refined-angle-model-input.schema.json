@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:repo-artifact:schema:refined-angle-model-input:v1",
+  "title": "RefinedAngleModelInput",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["refined_angle_model_input_version", "repository", "commit", "fact_ir_version", "base_candidate", "approved_fact_set", "relevant_known_unknowns", "task_contract", "provenance", "authorization"],
+  "properties": {
+    "refined_angle_model_input_version": { "const": 1 },
+    "repository": { "$ref": "urn:repo-artifact:schema:grounded-fact-pack:v1#/$defs/repository" },
+    "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "fact_ir_version": { "const": 1 },
+    "base_candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["base_candidate_id", "base_candidate_fingerprint_sha256", "title", "angle_type", "editorial_thesis", "why_interesting", "target_audience", "known_caveats"],
+      "properties": {
+        "base_candidate_id": { "type": "string", "minLength": 1 },
+        "base_candidate_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+        "title": { "type": "string", "minLength": 1 },
+        "angle_type": { "enum": ["ENGINEERING_BOUNDARY", "ARCHITECTURE_PATTERN", "LOCAL_BEHAVIOR", "DESIGN_TRADEOFF", "TYPE_SURFACE", "PACKAGE_SURFACE", "EVIDENCE_METHOD", "EDUCATIONAL_INSIGHT", "UNUSUAL_IMPLEMENTATION"] },
+        "editorial_thesis": { "type": "string", "minLength": 1 },
+        "why_interesting": { "type": "string", "minLength": 1 },
+        "target_audience": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["DEVELOPER", "AI_ENGINEER", "OPEN_SOURCE_MAINTAINER", "TECH_CREATOR", "GENERAL_TECH"] } },
+        "known_caveats": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "approved_fact_set": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["base_facts", "human_selected_additional_facts", "required_supporting_fact_refs", "maximum_total_supporting_facts"],
+      "properties": {
+        "base_facts": { "type": "array", "minItems": 1, "maxItems": 8, "items": { "$ref": "urn:repo-artifact:schema:angle-refinement-context:v1#/$defs/factView" } },
+        "human_selected_additional_facts": { "type": "array", "minItems": 1, "maxItems": 4, "items": { "$ref": "urn:repo-artifact:schema:angle-refinement-context:v1#/$defs/relatedOption" } },
+        "required_supporting_fact_refs": { "type": "array", "minItems": 2, "maxItems": 8, "uniqueItems": true, "items": { "$ref": "#/$defs/factRef" } },
+        "maximum_total_supporting_facts": { "const": 8 }
+      }
+    },
+    "relevant_known_unknowns": { "type": "array", "items": { "$ref": "urn:repo-artifact:schema:angle-refinement-context:v1#/$defs/knownUnknown" } },
+    "task_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["task", "output_contract", "base_candidate_read_only", "required_facts_must_be_retained", "fact_discovery_forbidden", "full_repository_forbidden", "readme_forbidden", "historical_candidates_forbidden", "positive_reference_rubric_forbidden", "external_comparison_forbidden", "novelty_claim_forbidden", "outcome_claim_forbidden", "safety_claim_forbidden", "scope_expansion_forbidden"],
+      "properties": {
+        "task": { "const": "REFRAME_HUMAN_APPROVED_FACT_SET" },
+        "output_contract": { "const": "RefinedAngleDraft v1" },
+        "base_candidate_read_only": { "const": true },
+        "required_facts_must_be_retained": { "const": true },
+        "fact_discovery_forbidden": { "const": true },
+        "full_repository_forbidden": { "const": true },
+        "readme_forbidden": { "const": true },
+        "historical_candidates_forbidden": { "const": true },
+        "positive_reference_rubric_forbidden": { "const": true },
+        "external_comparison_forbidden": { "const": true },
+        "novelty_claim_forbidden": { "const": true },
+        "outcome_claim_forbidden": { "const": true },
+        "safety_claim_forbidden": { "const": true },
+        "scope_expansion_forbidden": { "const": true }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["refinement_context_fingerprint_sha256", "refinement_selection_id", "refinement_selection_fingerprint_sha256"],
+      "properties": {
+        "refinement_context_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+        "refinement_selection_id": { "type": "string", "pattern": "^refinement-selection-[0-9a-f]{16}$" },
+        "refinement_selection_fingerprint_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "authorization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "real_model_authorized"],
+      "properties": {
+        "mode": { "const": "OFFLINE_CONTRACT_FIXTURE" },
+        "real_model_authorized": { "const": false }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "factRef": { "type": "string", "pattern": "^fact_[0-9]{3}$" }
+  }
+}

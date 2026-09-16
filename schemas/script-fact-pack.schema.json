@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:repo-artifact:schema:script-fact-pack:v1",
+  "title": "ScriptFactPack",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "script_fact_pack_version",
+    "repository",
+    "commit",
+    "fact_ir_version",
+    "approved_angle_ref",
+    "approved_angle_fingerprint_sha256",
+    "core_facts",
+    "context_facts",
+    "known_unknowns",
+    "context_policy",
+    "reference_contract",
+    "provenance",
+    "generation_metadata"
+  ],
+  "properties": {
+    "script_fact_pack_version": { "const": 1 },
+    "repository": { "$ref": "urn:repo-artifact:schema:grounded-fact-pack:v1#/$defs/repository" },
+    "commit": { "$ref": "#/$defs/commit" },
+    "fact_ir_version": { "enum": [1, 2] },
+    "approved_angle_ref": { "type": "string", "minLength": 1 },
+    "approved_angle_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+    "core_facts": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/modelFact" }
+    },
+    "context_facts": {
+      "type": "array",
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/modelFact" }
+    },
+    "known_unknowns": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/knownUnknown" }
+    },
+    "context_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy", "limit", "angle_drift_forbidden"],
+      "properties": {
+        "policy": { "const": "PACKAGE_IDENTITY_THEN_DIRECT_ENTITY_ONE_HOP" },
+        "limit": { "type": "integer", "minimum": 0, "maximum": 8 },
+        "angle_drift_forbidden": { "const": true }
+      }
+    },
+    "reference_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authoritative_fact_reference",
+        "authoritative_unknown_reference",
+        "canonical_fact_ids_model_visible",
+        "alternate_fact_aliases_model_visible"
+      ],
+      "properties": {
+        "authoritative_fact_reference": { "const": "fact_###" },
+        "authoritative_unknown_reference": { "const": "gap_*" },
+        "canonical_fact_ids_model_visible": { "const": false },
+        "alternate_fact_aliases_model_visible": { "const": false }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["approved_angle_artifact", "fact_pack_artifact", "canonical_brief_artifact"],
+      "properties": {
+        "approved_angle_artifact": { "$ref": "#/$defs/artifactReference" },
+        "fact_pack_artifact": { "$ref": "#/$defs/artifactReference" },
+        "canonical_brief_artifact": { "$ref": "#/$defs/artifactReference" }
+      }
+    },
+    "generation_metadata": { "$ref": "#/$defs/zeroExecution" }
+  },
+  "$defs": {
+    "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "artifactReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_path", "sha256"],
+      "properties": {
+        "artifact_path": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "modelFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model_fact_ref", "fact_type", "category", "subject", "predicate", "object", "scope", "limitations"],
+      "properties": {
+        "model_fact_ref": { "type": "string", "pattern": "^fact_[0-9]{3}$" },
+        "fact_type": { "enum": ["DECLARATION", "TYPE_DECLARATION", "EXPORT", "IMPORT_RELATION", "CALL_RELATION", "BRANCH_BEHAVIOR", "CONFIGURATION", "MODULE_CONTAINS"] },
+        "category": { "enum": ["STRUCTURAL", "BEHAVIORAL", "CONFIGURATION", "TYPE", "RELATION"] },
+        "subject": { "type": "string", "minLength": 1 },
+        "predicate": { "enum": ["DECLARES", "DECLARES_TYPE", "EXPORTS", "IMPORTS", "CALLS", "SKIPS_WHEN", "CONCATENATES_WHEN", "THROWS_WHEN", "DECLARES_CONFIGURATION", "CONTAINS"] },
+        "object": { "type": "string", "minLength": 1 },
+        "scope": { "enum": ["LOCAL", "MODULE", "PACKAGE"] },
+        "limitations": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "knownUnknown": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unknown_ref", "statement", "evidence_needed"],
+      "properties": {
+        "unknown_ref": { "type": "string", "pattern": "^gap_[a-z0-9_]+$" },
+        "statement": { "type": "string", "minLength": 1 },
+        "evidence_needed": { "type": "string", "minLength": 1 }
+      }
+    },
+    "zeroExecution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "paid_api_requests", "real_model_requests", "secret_reads", "repository_executions"],
+      "properties": {
+        "mode": { "const": "deterministic_offline_contract" },
+        "paid_api_requests": { "const": 0 },
+        "real_model_requests": { "const": 0 },
+        "secret_reads": { "const": 0 },
+        "repository_executions": { "const": 0 }
+      }
+    }
+  }
+}

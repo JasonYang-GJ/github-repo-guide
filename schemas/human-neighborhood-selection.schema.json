@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:repo-artifact:schema:human-neighborhood-selection:v1",
+  "title": "HumanNeighborhoodSelection v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["human_neighborhood_selection_version", "status", "repository", "commit", "fact_ir_version", "neighborhood_version", "neighborhood_id", "neighborhood_fingerprint_sha256", "connectivity_exploration_fingerprint_sha256", "human_selected", "timestamp", "decision_context", "authorization", "selection_fingerprint_sha256", "generation_metadata"],
+  "properties": {
+    "human_neighborhood_selection_version": { "const": 1 },
+    "status": { "const": "VALID" },
+    "repository": { "$ref": "urn:repo-artifact:schema:grounded-fact-pack:v1#/$defs/repository" },
+    "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "fact_ir_version": { "enum": [1, 2] },
+    "neighborhood_version": { "const": 1 },
+    "neighborhood_id": { "type": "string", "pattern": "^neighborhood_[0-9a-f]{16}$" },
+    "neighborhood_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+    "connectivity_exploration_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+    "human_selected": { "const": true },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "decision_context": { "enum": ["USER_ACTION", "OFFLINE_FIXTURE"] },
+    "authorization": {
+      "type": "object", "additionalProperties": false,
+      "required": ["neighborhood_editorial_context_generation_required", "real_model_authorized", "script_authorized"],
+      "properties": {
+        "neighborhood_editorial_context_generation_required": { "const": true },
+        "real_model_authorized": { "const": false },
+        "script_authorized": { "const": false }
+      }
+    },
+    "selection_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+    "generation_metadata": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "paid_api_requests", "real_model_requests", "secret_reads", "repository_executions"],
+      "properties": {
+        "mode": { "const": "human_neighborhood_selection" },
+        "paid_api_requests": { "const": 0 },
+        "real_model_requests": { "const": 0 },
+        "secret_reads": { "const": 0 },
+        "repository_executions": { "const": 0 }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

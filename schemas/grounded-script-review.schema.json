@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:repo-artifact:schema:grounded-script-review:v1",
+  "title": "GroundedScriptReview",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["script_review_version", "status", "repository", "commit", "fact_ir_version", "approved_angle", "script_fact_pack_summary", "draft", "host_validation", "quality_review", "fact_trace", "known_caveats", "provenance", "generation_metadata"],
+  "properties": {
+    "script_review_version": { "const": 1 },
+    "status": { "enum": ["HUMAN_REVIEW_READY", "HOST_REJECTED"] },
+    "repository": { "$ref": "urn:repo-artifact:schema:grounded-fact-pack:v1#/$defs/repository" },
+    "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "fact_ir_version": { "const": 1 },
+    "approved_angle": { "$ref": "urn:repo-artifact:schema:grounded-script-input:v1#/properties/approved_angle" },
+    "script_fact_pack_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["core_fact_count", "context_fact_count", "known_unknown_count", "evidence_count"],
+      "properties": {
+        "core_fact_count": { "type": "integer", "minimum": 1 },
+        "context_fact_count": { "type": "integer", "minimum": 0, "maximum": 8 },
+        "known_unknown_count": { "type": "integer", "minimum": 0 },
+        "evidence_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "draft": { "$ref": "urn:repo-artifact:schema:grounded-script-draft:v1" },
+    "host_validation": { "$ref": "#/$defs/validation" },
+    "quality_review": { "$ref": "#/$defs/quality" },
+    "fact_trace": { "type": "array", "items": { "$ref": "#/$defs/factTrace" } },
+    "known_caveats": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["approved_angle_artifact", "fact_pack_artifact", "canonical_brief_artifact", "script_input_fingerprint_sha256"],
+      "properties": {
+        "approved_angle_artifact": { "$ref": "urn:repo-artifact:schema:script-fact-pack:v1#/$defs/artifactReference" },
+        "fact_pack_artifact": { "$ref": "urn:repo-artifact:schema:script-fact-pack:v1#/$defs/artifactReference" },
+        "canonical_brief_artifact": { "$ref": "urn:repo-artifact:schema:script-fact-pack:v1#/$defs/artifactReference" },
+        "script_input_fingerprint_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "generation_metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "paid_api_requests", "real_model_requests", "secret_reads", "repository_executions", "script_generation_executed"],
+      "properties": {
+        "mode": { "const": "deterministic_offline_contract" },
+        "paid_api_requests": { "const": 0 },
+        "real_model_requests": { "const": 0 },
+        "secret_reads": { "const": 0 },
+        "repository_executions": { "const": 0 },
+        "script_generation_executed": { "const": false }
+      }
+    }
+  },
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "segment_id", "details"],
+      "properties": {
+        "code": { "type": "string", "minLength": 1 },
+        "segment_id": { "oneOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }] },
+        "details": { "type": "string", "minLength": 1 }
+      }
+    },
+    "clauseTrace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["segment_id", "clause_index", "text", "statement_kind", "supporting_fact_refs", "canonical_fact_ids", "evidence_ids", "status"],
+      "properties": {
+        "segment_id": { "type": "string", "minLength": 1 },
+        "clause_index": { "type": "integer", "minimum": 0 },
+        "text": { "type": "string", "minLength": 1 },
+        "statement_kind": { "enum": ["TECHNICAL_FACT", "EDITORIAL_FRAMING", "TRANSITION", "DOCUMENTATION", "CAVEAT", "UNKNOWN", "QUESTION"] },
+        "supporting_fact_refs": { "type": "array", "items": { "type": "string", "pattern": "^fact_[0-9]{3}$" } },
+        "canonical_fact_ids": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "evidence_ids": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "status": { "enum": ["FACT_TRACED", "NON_TECHNICAL_ALLOWED", "REJECTED"] },
+        "alignment_methods": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "FACT_REF_SCOPE_BOUND",
+              "EXPLICIT_CANONICAL_SUBJECT",
+              "BOUNDED_ADJACENT_SUBJECT_CARRYOVER_V1",
+              "DIRECT_STATIC_CALL_ALIGNMENT",
+              "OPERATOR_PARAPHRASE_GTE",
+              "OPERATOR_PARAPHRASE_LTE",
+              "BOOLEAN_NEGATION_PARAPHRASE",
+              "LOCATION_FALSY_SAFE_NARROWING_V1",
+              "REDIRECT_EXACT_EQUALITY_PARAPHRASE_V1",
+              "LOCAL_THROW_BRANCH_PARAPHRASE_V1",
+              "HOST_SEMANTICS_V3_FALLBACK"
+            ]
+          }
+        }
+      }
+    },
+    "duration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "language", "estimated_seconds", "target_min_seconds", "target_max_seconds", "range_result"],
+      "properties": {
+        "status": { "const": "ESTIMATE" },
+        "language": { "enum": ["en", "zh-CN"] },
+        "estimated_seconds": { "type": "integer", "minimum": 0 },
+        "target_min_seconds": { "const": 60 },
+        "target_max_seconds": { "const": 90 },
+        "range_result": { "enum": ["TARGET", "SOFT_WARNING", "OUT_OF_RANGE"] }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["script_validation_version", "status", "decision", "truth_gate", "findings", "clause_trace", "duration_estimate"],
+      "properties": {
+        "script_validation_version": { "const": 1 },
+        "clause_alignment_version": { "const": 2 },
+        "status": { "enum": ["PASS", "FAIL"] },
+        "decision": { "enum": ["HOST_VALIDATED", "HOST_REJECTED"] },
+        "truth_gate": { "enum": ["PASS", "FAIL"] },
+        "findings": { "type": "array", "items": { "$ref": "#/$defs/finding" } },
+        "clause_trace": { "type": "array", "items": { "$ref": "#/$defs/clauseTrace" } },
+        "duration_estimate": { "$ref": "#/$defs/duration" }
+      }
+    },
+    "rating": { "enum": ["PASS", "PARTIAL", "FAIL", "NOT_EVALUATED"] },
+    "quality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["script_quality_review_version", "basis", "truth_gate_status", "dimensions", "overall", "release_status"],
+      "properties": {
+        "script_quality_review_version": { "const": 1 },
+        "basis": { "const": "QUALITATIVE_EDITORIAL_REVIEW_NOT_TRUTH" },
+        "truth_gate_status": { "enum": ["PASS", "FAIL"] },
+        "dimensions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["angle_fidelity", "clarity", "narrative_coherence", "spoken_naturalness", "conciseness", "technical_density", "hook_quality", "caveat_handling"],
+          "properties": {
+            "angle_fidelity": { "$ref": "#/$defs/rating" },
+            "clarity": { "$ref": "#/$defs/rating" },
+            "narrative_coherence": { "$ref": "#/$defs/rating" },
+            "spoken_naturalness": { "$ref": "#/$defs/rating" },
+            "conciseness": { "$ref": "#/$defs/rating" },
+            "technical_density": { "$ref": "#/$defs/rating" },
+            "hook_quality": { "$ref": "#/$defs/rating" },
+            "caveat_handling": { "$ref": "#/$defs/rating" }
+          }
+        },
+        "overall": { "$ref": "#/$defs/rating" },
+        "release_status": { "enum": ["HUMAN_REVIEW_READY", "QUALITY_REVIEW_NEEDED", "BLOCKED_BY_TRUTH"] }
+      }
+    },
+    "factTrace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model_fact_ref", "role", "canonical_fact_id", "canonical_fact_summary", "evidence_ids", "evidence_available"],
+      "properties": {
+        "model_fact_ref": { "type": "string", "pattern": "^fact_[0-9]{3}$" },
+        "role": { "enum": ["CORE_FACT", "CONTEXT_FACT"] },
+        "canonical_fact_id": { "type": "string", "minLength": 1 },
+        "canonical_fact_summary": { "type": "string", "minLength": 1 },
+        "evidence_ids": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "evidence_available": { "type": "boolean" }
+      }
+    }
+  }
+}

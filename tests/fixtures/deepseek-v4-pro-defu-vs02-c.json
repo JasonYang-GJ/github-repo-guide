@@ -1,0 +1,369 @@
+{
+  "sourceArtifact": {
+    "path": "output/vs02-c-real-claim-semantics-canary/canary-result.json",
+    "sha256": "115f38001cc484fe791eb8c003ef8e6ca3b97e2d40b306ff85cdf9ed27dde3e6",
+    "repository": "https://github.com/unjs/defu",
+    "commit": "82632b66f5914e9946edce300e10633a3d5c0cb7",
+    "selectionNotes": "The narrative is copied exactly. Evidence entries retain exact captured locators or exact bounded source excerpts from the immutable VS02-C artifact; the original artifact is not rewritten."
+  },
+  "rawBriefNarrative": {
+    "oneSentence": "defu recursively assigns default properties onto an object, giving leftmost arguments higher priority and avoiding mutation of inputs.",
+    "summary": "defu is a TypeScript library that merges objects by recursively applying defaults. It exports `defu`, `createDefu`, `defuFn`, and `defuArrayFn`, with type utilities for merged types. The implementation is in src/defu.ts and relies on plain-object detection from src/_utils.ts. The package provides both ESM and CommonJS entry points through lib/defu.cjs and type declarations.",
+    "problem": "Assigning nested default values safely and ergonomically without mutating source or defaults, and with customizable merge behavior.",
+    "targetUsers": [
+      "JavaScript developers needing configuration default merging",
+      "TypeScript developers wanting merged type utilities",
+      "Library authors who need safe object defaults",
+      "Node.js and bundler users consuming npm packages"
+    ],
+    "moduleInterpretations": [
+      {
+        "sourcePath": "src/defu.ts",
+        "semanticName": "Core merge API",
+        "responsibility": "Implements the recursive `_defu` helper and exports `createDefu`, `defu`, `defuFn`, and `defuArrayFn`. It handles object, array, and function merge strategies.",
+        "whyImportant": "Contains the primary runtime logic for recursive default assignment and customization"
+      },
+      {
+        "sourcePath": "src/_utils.ts",
+        "semanticName": "Plain object detection",
+        "responsibility": "Provides `isPlainObject` to distinguish plain objects from arrays, class instances, and other objects.",
+        "whyImportant": "Essential for deciding when to traverse into nested objects during merging"
+      },
+      {
+        "sourcePath": "src/types.ts",
+        "semanticName": "Type-level merge utilities",
+        "responsibility": "Defines TypeScript types such as `Merge`, `MergeObjects`, `Defu`, `DefuFn`, and `DefuInstance` to model the runtime merging behavior.",
+        "whyImportant": "Enables static typing for merged results, matching runtime semantics"
+      },
+      {
+        "sourcePath": "lib/defu.cjs",
+        "semanticName": "CommonJS entry wrapper",
+        "responsibility": "Re-exports the main `defu` function and named helpers from the built CommonJS output.",
+        "whyImportant": "Allows CommonJS consumers to require the package with the expected API"
+      }
+    ]
+  },
+  "evidenceSnapshot": [
+    {
+      "evidence_record_version": 1,
+      "id": "vs02_c_manifest_description",
+      "claim_id": "vs02_c_source_claim",
+      "claim": "package.json describes defu as \"Recursively assign default properties. Lightweight and Fast!\".",
+      "evidence_type": "manifest_field",
+      "source_kind": "manifest",
+      "repository": {
+        "url": "https://github.com/unjs/defu",
+        "commit_sha": "82632b66f5914e9946edce300e10633a3d5c0cb7"
+      },
+      "locator": {
+        "source_path": "package.json",
+        "blob_sha": "e255cf5a64ece97c36ccecb2ed0d65711a5860df",
+        "field_pointer": "/description",
+        "excerpt": "\"Recursively assign default properties. Lightweight and Fast!\""
+      },
+      "supports_evidence_ids": [],
+      "confidence": 1,
+      "verification_status": "verified",
+      "verification": {
+        "method": "manifest_parse",
+        "checked_at": "2026-08-31T18:11:08.646Z",
+        "commit_resolved": true,
+        "path_exists": true,
+        "symbol_exists": null,
+        "line_range_valid": null,
+        "excerpt_matches": true
+      },
+      "notes": "Selected verbatim from VS02-C.",
+      "limitations": [
+        "The VS02-C artifact did not retain package.json exports/module evidence."
+      ]
+    },
+    {
+      "evidence_record_version": 1,
+      "id": "vs02_c_defu_branch",
+      "claim_id": "vs02_c_source_claim",
+      "claim": "In src/defu.ts, the shown branch skips a value when value is null or undefined.",
+      "evidence_type": "source_range",
+      "source_kind": "source_code",
+      "repository": {
+        "url": "https://github.com/unjs/defu",
+        "commit_sha": "82632b66f5914e9946edce300e10633a3d5c0cb7"
+      },
+      "locator": {
+        "source_path": "src/defu.ts",
+        "blob_sha": "1b2b84e83453d2191e31e857f68385032959a9ff",
+        "line_start": 19,
+        "line_end": 21,
+        "excerpt": "if (value === null || value === undefined) {\n      continue;\n    }"
+      },
+      "supports_evidence_ids": [],
+      "confidence": 1,
+      "verification_status": "verified",
+      "verification": {
+        "method": "exact_text",
+        "checked_at": "2026-08-31T18:11:08.646Z",
+        "commit_resolved": true,
+        "path_exists": true,
+        "symbol_exists": null,
+        "line_range_valid": true,
+        "excerpt_matches": true
+      },
+      "notes": "Exact bounded branch excerpt selected from the VS02-C _defu evidence.",
+      "limitations": [
+        "This excerpt proves its shown branches, not project-wide safety, immutability, or merge semantics."
+      ]
+    },
+    {
+      "evidence_record_version": 1,
+      "id": "vs02_c_nullish_type",
+      "claim_id": "vs02_c_source_claim",
+      "claim": "type nullish is declared in src/types.ts.",
+      "evidence_type": "symbol_declaration",
+      "source_kind": "source_code",
+      "repository": {
+        "url": "https://github.com/unjs/defu",
+        "commit_sha": "82632b66f5914e9946edce300e10633a3d5c0cb7"
+      },
+      "locator": {
+        "source_path": "src/types.ts",
+        "blob_sha": "2dabc03fcf27c2b8201cfc9fad51c46c03e67c3f",
+        "symbol": {
+          "name": "nullish",
+          "kind": "type"
+        },
+        "line_start": 11,
+        "line_end": 11,
+        "excerpt": "type nullish = null | undefined | void;"
+      },
+      "supports_evidence_ids": [],
+      "confidence": 1,
+      "verification_status": "verified",
+      "verification": {
+        "method": "ast_symbol",
+        "checked_at": "2026-08-31T18:11:08.646Z",
+        "commit_resolved": true,
+        "path_exists": true,
+        "symbol_exists": true,
+        "line_range_valid": true,
+        "excerpt_matches": true
+      },
+      "notes": "Bounded replay excerpt selected from VS02-C.",
+      "limitations": [
+        "A type declaration does not verify runtime correspondence."
+      ]
+    },
+    {
+      "evidence_record_version": 1,
+      "id": "evidence_symbol_src_defu_ts_createDefu_45",
+      "claim_id": "claim_symbol_src_defu_ts_createDefu_45",
+      "claim": "function createDefu is declared in src/defu.ts.",
+      "evidence_type": "symbol_declaration",
+      "source_kind": "source_code",
+      "repository": {
+        "url": "https://github.com/unjs/defu",
+        "commit_sha": "82632b66f5914e9946edce300e10633a3d5c0cb7"
+      },
+      "locator": {
+        "source_path": "src/defu.ts",
+        "blob_sha": "1b2b84e83453d2191e31e857f68385032959a9ff",
+        "symbol": {
+          "name": "createDefu",
+          "kind": "function"
+        },
+        "line_start": 45,
+        "line_end": 49,
+        "excerpt": "export function createDefu(merger?: Merger): DefuFunction {\n  return (...arguments_) =>\n    // eslint-disable-next-line unicorn/no-array-reduce\n    arguments_.reduce((p, c) => _defu(p, c, \"\", merger), {} as any);\n}"
+      },
+      "supports_evidence_ids": [],
+      "confidence": 1,
+      "verification_status": "verified",
+      "verification": {
+        "method": "ast_symbol",
+        "checked_at": "2026-08-31T18:11:08.646Z",
+        "commit_resolved": true,
+        "path_exists": true,
+        "symbol_exists": true,
+        "line_range_valid": true,
+        "excerpt_matches": true
+      },
+      "notes": "Copied from the VS02-C evidence artifact.",
+      "limitations": []
+    },
+    {
+      "evidence_record_version": 1,
+      "id": "evidence_symbol_src_defu_ts_defu_52",
+      "claim_id": "claim_symbol_src_defu_ts_defu_52",
+      "claim": "constant defu is declared in src/defu.ts.",
+      "evidence_type": "symbol_declaration",
+      "source_kind": "source_code",
+      "repository": {
+        "url": "https://github.com/unjs/defu",
+        "commit_sha": "82632b66f5914e9946edce300e10633a3d5c0cb7"
+      },
+      "locator": {
+        "source_path": "src/defu.ts",
+        "blob_sha": "1b2b84e83453d2191e31e857f68385032959a9ff",
+        "symbol": {
+          "name": "defu",
+          "kind": "constant"
+        },
+        "line_start": 52,
+        "line_end": 52,
+        "excerpt": "export const defu = createDefu() as DefuInstance;"
+      },
+      "supports_evidence_ids": [],
+      "confidence": 1,
+      "verification_status": "verified",
+      "verification": {
+        "method": "ast_symbol",
+        "checked_at": "2026-08-31T18:11:08.646Z",
+        "commit_resolved": true,
+        "path_exists": true,
+        "symbol_exists": true,
+        "line_range_valid": true,
+        "excerpt_matches": true
+      },
+      "notes": "Copied from the VS02-C evidence artifact.",
+      "limitations": []
+    },
+    {
+      "evidence_record_version": 1,
+      "id": "evidence_symbol_src_defu_ts_defuFn_56",
+      "claim_id": "claim_symbol_src_defu_ts_defuFn_56",
+      "claim": "constant defuFn is declared in src/defu.ts.",
+      "evidence_type": "symbol_declaration",
+      "source_kind": "source_code",
+      "repository": {
+        "url": "https://github.com/unjs/defu",
+        "commit_sha": "82632b66f5914e9946edce300e10633a3d5c0cb7"
+      },
+      "locator": {
+        "source_path": "src/defu.ts",
+        "blob_sha": "1b2b84e83453d2191e31e857f68385032959a9ff",
+        "symbol": {
+          "name": "defuFn",
+          "kind": "constant"
+        },
+        "line_start": 56,
+        "line_end": 61,
+        "excerpt": "export const defuFn = createDefu((object, key, currentValue) => {\n  if (object[key] !== undefined && typeof currentValue === \"function\") {\n    object[key] = currentValue(object[key]);\n    return true;\n  }\n});"
+      },
+      "supports_evidence_ids": [],
+      "confidence": 1,
+      "verification_status": "verified",
+      "verification": {
+        "method": "ast_symbol",
+        "checked_at": "2026-08-31T18:11:08.646Z",
+        "commit_resolved": true,
+        "path_exists": true,
+        "symbol_exists": true,
+        "line_range_valid": true,
+        "excerpt_matches": true
+      },
+      "notes": "Copied from the VS02-C evidence artifact.",
+      "limitations": []
+    },
+    {
+      "evidence_record_version": 1,
+      "id": "evidence_symbol_src_defu_ts_defuArrayFn_64",
+      "claim_id": "claim_symbol_src_defu_ts_defuArrayFn_64",
+      "claim": "constant defuArrayFn is declared in src/defu.ts.",
+      "evidence_type": "symbol_declaration",
+      "source_kind": "source_code",
+      "repository": {
+        "url": "https://github.com/unjs/defu",
+        "commit_sha": "82632b66f5914e9946edce300e10633a3d5c0cb7"
+      },
+      "locator": {
+        "source_path": "src/defu.ts",
+        "blob_sha": "1b2b84e83453d2191e31e857f68385032959a9ff",
+        "symbol": {
+          "name": "defuArrayFn",
+          "kind": "constant"
+        },
+        "line_start": 64,
+        "line_end": 69,
+        "excerpt": "export const defuArrayFn = createDefu((object, key, currentValue) => {\n  if (Array.isArray(object[key]) && typeof currentValue === \"function\") {\n    object[key] = currentValue(object[key]);\n    return true;\n  }\n});"
+      },
+      "supports_evidence_ids": [],
+      "confidence": 1,
+      "verification_status": "verified",
+      "verification": {
+        "method": "ast_symbol",
+        "checked_at": "2026-08-31T18:11:08.646Z",
+        "commit_resolved": true,
+        "path_exists": true,
+        "symbol_exists": true,
+        "line_range_valid": true,
+        "excerpt_matches": true
+      },
+      "notes": "Copied from the VS02-C evidence artifact.",
+      "limitations": []
+    },
+    {
+      "evidence_record_version": 1,
+      "id": "vs02_c_import_utils",
+      "claim_id": "vs02_c_source_claim",
+      "claim": "src/defu.ts imports src/_utils.ts through ./_utils.",
+      "evidence_type": "source_range",
+      "source_kind": "source_code",
+      "repository": {
+        "url": "https://github.com/unjs/defu",
+        "commit_sha": "82632b66f5914e9946edce300e10633a3d5c0cb7"
+      },
+      "locator": {
+        "source_path": "src/defu.ts",
+        "blob_sha": "1b2b84e83453d2191e31e857f68385032959a9ff",
+        "line_start": 1,
+        "line_end": 1,
+        "excerpt": "import { isPlainObject } from \"./_utils\";"
+      },
+      "supports_evidence_ids": [],
+      "confidence": 1,
+      "verification_status": "verified",
+      "verification": {
+        "method": "exact_text",
+        "checked_at": "2026-08-31T18:11:08.646Z",
+        "commit_resolved": true,
+        "path_exists": true,
+        "symbol_exists": null,
+        "line_range_valid": true,
+        "excerpt_matches": true
+      },
+      "notes": "Selected verbatim from VS02-C.",
+      "limitations": []
+    },
+    {
+      "evidence_record_version": 1,
+      "id": "vs02_c_cjs_tree",
+      "claim_id": "vs02_c_source_claim",
+      "claim": "Source module lib/defu.cjs exists at the resolved commit.",
+      "evidence_type": "tree_entry",
+      "source_kind": "repository_tree",
+      "repository": {
+        "url": "https://github.com/unjs/defu",
+        "commit_sha": "82632b66f5914e9946edce300e10633a3d5c0cb7"
+      },
+      "locator": {
+        "source_path": "lib/defu.cjs",
+        "blob_sha": "c949c7c9dd3330319c3d24675875e22952cf0a0e"
+      },
+      "supports_evidence_ids": [],
+      "confidence": 1,
+      "verification_status": "verified",
+      "verification": {
+        "method": "tree_lookup",
+        "checked_at": "2026-08-31T18:11:08.646Z",
+        "commit_resolved": true,
+        "path_exists": true,
+        "symbol_exists": null,
+        "line_range_valid": null,
+        "excerpt_matches": null
+      },
+      "notes": "Selected verbatim from VS02-C.",
+      "limitations": [
+        "CJS path existence is not ESM export evidence."
+      ]
+    }
+  ]
+}

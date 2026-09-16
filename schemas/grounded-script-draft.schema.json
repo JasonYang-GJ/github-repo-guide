@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:repo-artifact:schema:grounded-script-draft:v1",
+  "title": "GroundedScriptDraft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["script_version", "status", "repository", "commit", "fact_ir_version", "approved_angle_ref", "language", "target_duration_seconds", "segments", "generation_metadata"],
+  "properties": {
+    "script_version": { "const": 1 },
+    "status": { "const": "GENERATED" },
+    "repository": { "$ref": "urn:repo-artifact:schema:grounded-fact-pack:v1#/$defs/repository" },
+    "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "fact_ir_version": { "enum": [1, 2] },
+    "approved_angle_ref": { "type": "string", "minLength": 1 },
+    "language": { "enum": ["en", "zh-CN"] },
+    "target_duration_seconds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max"],
+      "properties": { "min": { "const": 60 }, "max": { "const": 90 } }
+    },
+    "segments": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/segment" } },
+    "generation_metadata": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "provider", "model", "paid_api_requests", "real_model_requests", "secret_reads", "repository_executions"],
+          "properties": {
+            "mode": { "const": "deterministic_offline_fixture" },
+            "provider": { "const": "FAKE_DETERMINISTIC" },
+            "model": { "type": "null" },
+            "paid_api_requests": { "const": 0 },
+            "real_model_requests": { "const": 0 },
+            "secret_reads": { "const": 0 },
+            "repository_executions": { "const": 0 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "provider", "model", "paid_api_requests", "real_model_requests", "secret_reads", "repository_executions"],
+          "properties": {
+            "mode": { "const": "real_model_canary" },
+            "provider": { "const": "dashscope" },
+            "model": { "const": "qwen3.8-max" },
+            "paid_api_requests": { "const": 1 },
+            "real_model_requests": { "const": 1 },
+            "secret_reads": { "const": 1 },
+            "repository_executions": { "const": 0 }
+          }
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "factRef": { "type": "string", "pattern": "^fact_[0-9]{3}$" },
+    "gapRef": { "type": "string", "pattern": "^gap_[a-z0-9_]+$" },
+    "segment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["segment_id", "role", "text", "statement_kind", "supporting_fact_refs", "context_fact_refs", "known_unknown_refs", "approved_angle_ref"],
+      "properties": {
+        "segment_id": { "type": "string", "pattern": "^segment_[0-9]{2,}$" },
+        "role": { "enum": ["HOOK", "SETUP", "TECHNICAL_EXPLANATION", "TRANSITION", "CAVEAT", "CLOSE"] },
+        "text": { "type": "string", "minLength": 1 },
+        "statement_kind": { "enum": ["TECHNICAL_FACT", "EDITORIAL_FRAMING", "TRANSITION", "DOCUMENTATION", "CAVEAT", "UNKNOWN", "QUESTION"] },
+        "supporting_fact_refs": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/factRef" } },
+        "context_fact_refs": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/factRef" } },
+        "known_unknown_refs": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/gapRef" } },
+        "approved_angle_ref": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

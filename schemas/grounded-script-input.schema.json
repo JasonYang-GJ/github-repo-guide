@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:repo-artifact:schema:grounded-script-input:v1",
+  "title": "GroundedScriptInput",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["script_input_version", "repository", "commit", "fact_ir_version", "approved_angle", "script_fact_pack", "style_profile", "output_contract", "authorization"],
+  "properties": {
+    "script_input_version": { "const": 1 },
+    "repository": { "$ref": "urn:repo-artifact:schema:grounded-fact-pack:v1#/$defs/repository" },
+    "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "fact_ir_version": { "enum": [1, 2] },
+    "approved_angle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["approved_angle_ref", "title", "editorial_thesis", "known_caveats"],
+      "properties": {
+        "approved_angle_ref": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "editorial_thesis": { "type": "string", "minLength": 1 },
+        "editorial_strength": { "enum": ["USEFUL", "STRONG"] },
+        "source_kind": { "const": "HUMAN_COMPOSITION" },
+        "human_confirmed": { "const": true },
+        "known_caveats": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      },
+      "oneOf": [
+        { "required": ["editorial_strength"] },
+        { "required": ["source_kind", "human_confirmed"] }
+      ]
+    },
+    "script_fact_pack": { "$ref": "urn:repo-artifact:schema:script-fact-pack:v1" },
+    "style_profile": { "$ref": "urn:repo-artifact:schema:script-style-profile:v1" },
+    "output_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "structured_output_only", "approved_angle_read_only", "fact_discovery_forbidden", "analogy_forbidden"],
+      "properties": {
+        "schema": { "const": "GroundedScriptDraft v1" },
+        "structured_output_only": { "const": true },
+        "approved_angle_read_only": { "const": true },
+        "fact_discovery_forbidden": { "const": true },
+        "analogy_forbidden": { "const": true }
+      }
+    },
+    "authorization": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "real_model_authorized"],
+          "properties": {
+            "mode": { "const": "OFFLINE_CONTRACT_FIXTURE" },
+            "real_model_authorized": { "const": false }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "real_model_authorized", "authorization_id", "max_paid_requests", "max_http_attempts", "retries", "resampling", "fallbacks"],
+          "properties": {
+            "mode": { "const": "REAL_SCRIPT_CANARY" },
+            "real_model_authorized": { "const": true },
+            "authorization_id": { "const": "VS07-E" },
+            "max_paid_requests": { "const": 1 },
+            "max_http_attempts": { "const": 1 },
+            "retries": { "const": 0 },
+            "resampling": { "const": 0 },
+            "fallbacks": { "const": 0 }
+          }
+        }
+      ]
+    }
+  }
+}

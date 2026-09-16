@@ -1,0 +1,204 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:repo-artifact:schema:editorial-angle-decision:v1",
+  "title": "EditorialAngleDecisionArtifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "editorial_decision_version",
+    "decision",
+    "status",
+    "lifecycle",
+    "repository",
+    "commit",
+    "fact_ir_version",
+    "content_angle_version",
+    "candidate_id",
+    "candidate_fingerprint_sha256",
+    "title",
+    "editorial_thesis",
+    "supporting_fact_ids",
+    "canonical_technical_basis",
+    "known_caveats",
+    "host_validation",
+    "editorial_signal",
+    "decided_by",
+    "approved_by",
+    "decision_timestamp",
+    "approval_timestamp",
+    "decision_context",
+    "generation_model",
+    "generation_receipt",
+    "script_eligibility",
+    "explicit_script_generation_required",
+    "generation_metadata"
+  ],
+  "properties": {
+    "editorial_decision_version": { "const": 1 },
+    "decision": { "enum": ["APPROVE", "REJECT"] },
+    "status": { "enum": ["HUMAN_APPROVED", "HUMAN_REJECTED"] },
+    "lifecycle": {
+      "type": "array",
+      "prefixItems": [
+        { "const": "GENERATED" },
+        { "const": "HOST_VALIDATED" },
+        { "enum": ["HUMAN_APPROVED", "HUMAN_REJECTED"] }
+      ],
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "repository": {
+      "$ref": "urn:repo-artifact:schema:grounded-fact-pack:v1#/$defs/repository"
+    },
+    "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "fact_ir_version": { "const": 1 },
+    "content_angle_version": { "const": 2 },
+    "candidate_id": { "type": "string", "minLength": 1 },
+    "candidate_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+    "title": { "type": "string", "minLength": 1 },
+    "editorial_thesis": { "type": "string", "minLength": 1 },
+    "supporting_fact_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "canonical_technical_basis": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "urn:repo-artifact:schema:content-angle:v2#/$defs/technicalBasis"
+      }
+    },
+    "known_caveats": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "host_validation": { "$ref": "#/$defs/hostValidation" },
+    "editorial_signal": { "$ref": "#/$defs/editorialSignal" },
+    "decided_by": { "const": "human" },
+    "approved_by": {
+      "oneOf": [{ "const": "human" }, { "type": "null" }]
+    },
+    "decision_timestamp": { "type": "string", "format": "date-time" },
+    "approval_timestamp": {
+      "oneOf": [
+        { "type": "string", "format": "date-time" },
+        { "type": "null" }
+      ]
+    },
+    "decision_context": { "enum": ["USER_ACTION", "OFFLINE_FIXTURE"] },
+    "generation_model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "model"],
+      "properties": {
+        "provider": { "type": "string", "minLength": 1 },
+        "model": { "type": "string", "minLength": 1 }
+      }
+    },
+    "generation_receipt": { "$ref": "#/$defs/artifactReference" },
+    "script_eligibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["eligible", "status", "reason"],
+      "properties": {
+        "eligible": { "type": "boolean" },
+        "status": { "enum": ["ELIGIBLE", "NOT_ELIGIBLE"] },
+        "reason": {
+          "enum": [
+            "HOST_VALIDATED_HUMAN_APPROVED_EDITORIAL_STRENGTH_USEFUL_OR_STRONG",
+            "HUMAN_REJECTED",
+            "EDITORIAL_STRENGTH_BELOW_USEFUL"
+          ]
+        }
+      }
+    },
+    "explicit_script_generation_required": { "const": true },
+    "generation_metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "paid_api_requests",
+        "real_model_requests",
+        "secret_reads",
+        "repository_executions"
+      ],
+      "properties": {
+        "mode": { "const": "offline_human_decision" },
+        "paid_api_requests": { "const": 0 },
+        "real_model_requests": { "const": 0 },
+        "secret_reads": { "const": 0 },
+        "repository_executions": { "const": 0 }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "decision": { "const": "APPROVE" } } },
+      "then": {
+        "properties": {
+          "status": { "const": "HUMAN_APPROVED" },
+          "approved_by": { "const": "human" },
+          "approval_timestamp": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "decision": { "const": "REJECT" } } },
+      "then": {
+        "properties": {
+          "status": { "const": "HUMAN_REJECTED" },
+          "approved_by": { "type": "null" },
+          "approval_timestamp": { "type": "null" },
+          "script_eligibility": {
+            "properties": {
+              "eligible": { "const": false },
+              "status": { "const": "NOT_ELIGIBLE" },
+              "reason": { "const": "HUMAN_REJECTED" }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "artifactReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_path", "sha256"],
+      "properties": {
+        "artifact_path": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "hostValidation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "decision_codes"],
+      "properties": {
+        "status": { "const": "PASS" },
+        "decision_codes": {
+          "type": "array",
+          "prefixItems": [{ "const": "ALL_HARD_GATES_PASSED" }],
+          "minItems": 1,
+          "maxItems": 1
+        }
+      }
+    },
+    "editorialSignal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["strength", "classification", "basis", "rationale", "source"],
+      "properties": {
+        "strength": { "enum": ["WEAK", "USEFUL", "STRONG"] },
+        "classification": { "type": "string", "minLength": 1 },
+        "basis": { "const": "EDITORIAL_HEURISTIC_NOT_OBJECTIVE_TRUTH" },
+        "rationale": { "type": "string", "minLength": 1 },
+        "source": { "$ref": "#/$defs/artifactReference" }
+      }
+    }
+  }
+}

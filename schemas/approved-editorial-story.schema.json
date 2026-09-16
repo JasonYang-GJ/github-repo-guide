@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:repo-artifact:schema:approved-editorial-story:v1",
+  "title": "ApprovedEditorialStory v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["approved_editorial_story_version", "story_id", "source", "repository", "commit", "fact_ir_version", "host_semantics_version", "title", "editorial_thesis", "why_this_story", "target_audience", "supporting_fact_ids", "known_caveats", "approval_provenance", "host_validation", "script_eligibility", "story_fingerprint_sha256"],
+  "properties": {
+    "approved_editorial_story_version": { "const": 1 },
+    "story_id": { "type": "string", "pattern": "^story_[0-9a-f]{24}$" },
+    "source": { "enum": ["MODEL_SUGGESTED_ANGLE", "HUMAN_COMPOSITION"] },
+    "source_kind": { "const": "HUMAN_COMPOSITION" },
+    "status": { "enum": ["CURRENT", "STALE"] },
+    "human_decision_artifact_id": { "type": "string", "pattern": "^decision_[0-9a-f]{24}$" },
+    "host_validation_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+    "composer_context_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+    "composition_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+    "repository": { "$ref": "urn:repo-artifact:schema:grounded-fact-pack:v1#/$defs/repository" },
+    "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "fact_ir_version": { "enum": [1, 2] },
+    "host_semantics_version": { "enum": [2, 3] },
+    "title": { "type": "string", "minLength": 1 },
+    "editorial_thesis": { "type": "string", "minLength": 1 },
+    "why_this_story": { "type": "string", "minLength": 1 },
+    "target_audience": { "$ref": "#/$defs/nonEmptyStrings" },
+    "supporting_fact_ids": { "$ref": "#/$defs/nonEmptyStrings" },
+    "known_caveats": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "approval_provenance": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source", "human_confirmed", "approval_artifact_fingerprint_sha256", "approved_at", "decision_context"],
+      "properties": {
+        "source": { "enum": ["MODEL_SUGGESTED_ANGLE", "HUMAN_COMPOSITION"] },
+        "human_confirmed": { "const": true },
+        "approval_artifact_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+        "approved_at": { "type": "string", "format": "date-time" },
+        "decision_context": { "enum": ["USER_ACTION", "OFFLINE_FIXTURE"] }
+      }
+    },
+    "host_validation": { "$ref": "#/$defs/hostValidation" },
+    "script_eligibility": {
+      "type": "object", "additionalProperties": false,
+      "required": ["contract_eligible", "execution_authorized", "explicit_script_generation_action_required"],
+      "properties": {
+        "contract_eligible": { "const": true },
+        "execution_authorized": { "const": false },
+        "explicit_script_generation_action_required": { "const": true }
+      }
+    },
+    "story_fingerprint_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "nonEmptyStrings": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "hostValidation": {
+      "type": "object", "additionalProperties": false, "required": ["status", "host_semantics_version", "validation_fingerprint_sha256"],
+      "properties": { "status": { "const": "PASS" }, "host_semantics_version": { "enum": [2, 3] }, "validation_fingerprint_sha256": { "$ref": "#/$defs/sha256" } }
+    }
+  }
+}

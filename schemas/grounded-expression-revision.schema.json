@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:repo-artifact:schema:grounded-expression-revision:v1",
+  "title": "GroundedExpressionRevision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "grounded_expression_revision_version",
+    "revision_id",
+    "source_script_id",
+    "source_script_fingerprint_sha256",
+    "approved_story_id",
+    "approved_story_fingerprint_sha256",
+    "repository",
+    "commit",
+    "fact_ir_version",
+    "language",
+    "style_profile",
+    "segments",
+    "source_segment_mapping",
+    "fact_refs",
+    "known_unknowns",
+    "revision_metadata",
+    "revision_fingerprint_sha256"
+  ],
+  "properties": {
+    "grounded_expression_revision_version": { "const": 1 },
+    "revision_id": { "type": "string", "pattern": "^expression_revision_[0-9a-f]{24}$" },
+    "source_script_id": { "type": "string", "pattern": "^script_[0-9a-f]{24}$" },
+    "source_script_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+    "approved_story_id": { "type": "string", "minLength": 1 },
+    "approved_story_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+    "repository": { "$ref": "urn:repo-artifact:schema:grounded-fact-pack:v1#/$defs/repository" },
+    "commit": { "$ref": "#/$defs/commit" },
+    "fact_ir_version": { "enum": [1, 2] },
+    "language": { "const": "zh-CN" },
+    "style_profile": { "$ref": "urn:repo-artifact:schema:spoken-technical-style-profile:v1" },
+    "segments": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/segment" }
+    },
+    "source_segment_mapping": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/sourceMapping" }
+    },
+    "fact_refs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/factRef" } },
+    "known_unknowns": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/knownUnknown" } },
+    "revision_metadata": {
+      "oneOf": [
+        { "$ref": "#/$defs/zeroExecution" },
+        { "$ref": "#/$defs/realModelExecution" }
+      ]
+    },
+    "revision_fingerprint_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "factRef": { "type": "string", "pattern": "^fact_[0-9]{3}$" },
+    "gapRef": { "type": "string", "pattern": "^gap_[a-z0-9_]+$" },
+    "clauseId": { "type": "string", "pattern": "^source_clause:[A-Za-z0-9_-]+:[0-9]+$" },
+    "knownUnknown": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unknown_ref", "statement", "evidence_needed"],
+      "properties": {
+        "unknown_ref": { "$ref": "#/$defs/gapRef" },
+        "statement": { "type": "string", "minLength": 1 },
+        "evidence_needed": { "type": "string", "minLength": 1 }
+      }
+    },
+    "clause": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["revision_clause_id", "text", "statement_kind", "source_clause_ids", "fact_refs", "known_unknown_refs", "rewrite_operation"],
+      "properties": {
+        "revision_clause_id": { "type": "string", "pattern": "^revision_clause_[0-9]{2,}$" },
+        "text": { "type": "string", "minLength": 1 },
+        "statement_kind": { "enum": ["TECHNICAL_FACT", "EDITORIAL_FRAMING", "TRANSITION", "DOCUMENTATION", "CAVEAT", "UNKNOWN", "QUESTION"] },
+        "source_clause_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/clauseId" } },
+        "fact_refs": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/factRef" } },
+        "known_unknown_refs": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/gapRef" } },
+        "rewrite_operation": { "enum": ["PARAPHRASE", "MERGE", "COMPRESS", "REORDER", "EDITORIAL_POLISH"] }
+      }
+    },
+    "segment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["revision_segment_id", "role", "text", "clauses"],
+      "properties": {
+        "revision_segment_id": { "type": "string", "pattern": "^revision_segment_[0-9]{2,}$" },
+        "role": { "enum": ["HOOK", "SETUP", "TECHNICAL_EXPLANATION", "TRANSITION", "CAVEAT", "CLOSE"] },
+        "text": { "type": "string", "minLength": 1 },
+        "clauses": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/clause" } }
+      }
+    },
+    "sourceMapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_segment_id", "source_clause_ids", "revision_segment_ids", "disposition", "reason"],
+      "properties": {
+        "source_segment_id": { "type": "string", "minLength": 1 },
+        "source_clause_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/clauseId" } },
+        "revision_segment_ids": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^revision_segment_[0-9]{2,}$" } },
+        "disposition": { "enum": ["REWRITTEN", "MERGED", "OMITTED_FOR_BREVITY"] },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "zeroExecution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "synthetic_fixture", "model_generated", "semantic_operations", "paid_api_requests", "real_model_requests", "secret_reads", "repository_executions"],
+      "properties": {
+        "mode": { "const": "deterministic_offline_fixture" },
+        "synthetic_fixture": { "const": true },
+        "model_generated": { "const": false },
+        "semantic_operations": { "type": "array", "uniqueItems": true, "items": { "enum": ["SIMPLIFY", "COMPRESS", "REORDER", "MERGE", "NATURALIZE"] } },
+        "paid_api_requests": { "const": 0 },
+        "real_model_requests": { "const": 0 },
+        "secret_reads": { "const": 0 },
+        "repository_executions": { "const": 0 }
+      }
+    },
+    "realModelExecution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "synthetic_fixture", "model_generated", "provider", "model", "enable_thinking", "semantic_operations", "paid_api_requests", "real_model_requests", "secret_reads", "repository_executions"],
+      "properties": {
+        "mode": { "const": "real_model_canary" },
+        "synthetic_fixture": { "const": false },
+        "model_generated": { "const": true },
+        "provider": { "const": "dashscope" },
+        "model": { "const": "qwen3.8-max" },
+        "enable_thinking": { "const": false },
+        "semantic_operations": { "type": "array", "uniqueItems": true, "items": { "enum": ["SIMPLIFY", "COMPRESS", "REORDER", "MERGE", "NATURALIZE"] } },
+        "paid_api_requests": { "const": 1 },
+        "real_model_requests": { "const": 1 },
+        "secret_reads": { "const": 1 },
+        "repository_executions": { "const": 0 }
+      }
+    }
+  }
+}

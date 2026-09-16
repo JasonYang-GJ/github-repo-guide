@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:repo-artifact:schema:grounded-brief-plan:v1",
+  "title": "GroundedBriefPlan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "brief_plan_version",
+    "repository",
+    "commit",
+    "fact_ir_version",
+    "selection_policy_version",
+    "selected_facts",
+    "excluded_facts",
+    "coverage",
+    "section_plan",
+    "known_gaps"
+  ],
+  "properties": {
+    "brief_plan_version": { "const": 1 },
+    "repository": { "$ref": "#/$defs/repository" },
+    "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "fact_ir_version": { "enum": [1, 2] },
+    "selection_policy_version": { "const": 1 },
+    "selected_facts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/selectedFact" }
+    },
+    "excluded_facts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/excludedFact" }
+    },
+    "coverage": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/coverage" }
+    },
+    "section_plan": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/sectionPlan" }
+    },
+    "known_gaps": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/knownGap" }
+    }
+  },
+  "$defs": {
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["url", "owner", "name"],
+      "properties": {
+        "url": { "type": "string", "format": "uri" },
+        "owner": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 }
+      }
+    },
+    "selectedFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fact_id",
+        "priority",
+        "score",
+        "section_id",
+        "selection_reasons"
+      ],
+      "properties": {
+        "fact_id": { "type": "string", "minLength": 1 },
+        "priority": { "type": "integer", "minimum": 1 },
+        "score": { "type": "integer", "minimum": 0 },
+        "section_id": { "type": "string", "minLength": 1 },
+        "selection_reasons": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "BEHAVIORAL_EVIDENCE",
+              "PACKAGE_SURFACE",
+              "EXPORTED_SURFACE",
+              "RELATION_PARTICIPATION",
+              "ENTITY_CENTRALITY",
+              "CORE_STRUCTURE",
+              "TYPE_SURFACE",
+              "ENTRY_RELEVANCE",
+              "DOCUMENTED_PURPOSE"
+            ]
+          }
+        }
+      }
+    },
+    "excludedFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fact_id", "reason", "detail"],
+      "properties": {
+        "fact_id": { "type": "string", "minLength": 1 },
+        "reason": {
+          "enum": [
+            "LOW_INFORMATION",
+            "DUPLICATE",
+            "LOW_CENTRALITY",
+            "OUT_OF_BRIEF_SCOPE"
+          ]
+        },
+        "detail": { "type": "string", "minLength": 1 }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["category", "status", "fact_ids", "note"],
+      "properties": {
+        "category": {
+          "enum": [
+            "PACKAGE_SURFACE",
+            "CORE_STRUCTURE",
+            "CORE_RELATIONS",
+            "VERIFIED_BEHAVIOR",
+            "TYPE_SURFACE",
+            "KNOWN_UNKNOWNS"
+          ]
+        },
+        "status": { "enum": ["AVAILABLE", "UNAVAILABLE"] },
+        "fact_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "note": { "type": "string", "minLength": 1 }
+      }
+    },
+    "sectionPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "purpose", "fact_ids", "known_gap_ids"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "purpose": { "type": "string", "minLength": 1 },
+        "fact_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "known_gap_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "knownGap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "area", "reason", "evidence_needed", "source_unsupported_area_id"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "area": { "type": "string", "minLength": 1 },
+        "reason": { "type": "string", "minLength": 1 },
+        "evidence_needed": { "type": "string", "minLength": 1 },
+        "source_unsupported_area_id": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

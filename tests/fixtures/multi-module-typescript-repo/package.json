@@ -1,0 +1,10 @@
+{
+  "name": "layered-notes",
+  "version": "1.0.0",
+  "description": "A layered TypeScript notes service",
+  "type": "module",
+  "exports": "./dist/index.js",
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  }
+}

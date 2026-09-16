@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:repo-artifact:schema:neighborhood-editorial-context:v1",
+  "title": "NeighborhoodEditorialContext v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["neighborhood_editorial_context_version", "status", "repository", "commit", "fact_ir_version", "project_identity", "selected_neighborhood", "canonical_fact_refs", "canonical_facts", "fact_counts", "known_unknowns", "truth_boundaries", "provenance", "context_fingerprint_sha256", "generation_metadata"],
+  "properties": {
+    "neighborhood_editorial_context_version": { "const": 1 },
+    "status": { "const": "READY" },
+    "repository": { "$ref": "urn:repo-artifact:schema:grounded-fact-pack:v1#/$defs/repository" },
+    "commit": { "$ref": "#/$defs/commit" },
+    "fact_ir_version": { "enum": [1, 2] },
+    "project_identity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["repository_full_name", "selected_module_paths"],
+      "properties": {
+        "repository_full_name": { "type": "string", "pattern": "^[^/]+/[^/]+$" },
+        "selected_module_paths": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "selected_neighborhood": {
+      "type": "object", "additionalProperties": false,
+      "required": ["neighborhood_version", "neighborhood_id", "neighborhood_fingerprint_sha256", "seed_label", "seed_entity_refs"],
+      "properties": {
+        "neighborhood_version": { "const": 1 },
+        "neighborhood_id": { "type": "string", "pattern": "^neighborhood_[0-9a-f]{16}$" },
+        "neighborhood_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+        "seed_label": { "type": "string", "minLength": 1 },
+        "seed_entity_refs": { "type": "array", "minItems": 1, "maxItems": 3, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "canonical_fact_refs": { "$ref": "#/$defs/factRefs" },
+    "canonical_facts": { "type": "array", "minItems": 2, "maxItems": 30, "items": { "$ref": "#/$defs/fact" } },
+    "fact_counts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["total", "call", "behavior", "relation", "structural", "configuration", "type"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 2, "maximum": 30 },
+        "call": { "type": "integer", "minimum": 0, "maximum": 30 },
+        "behavior": { "type": "integer", "minimum": 0, "maximum": 30 },
+        "relation": { "type": "integer", "minimum": 0, "maximum": 30 },
+        "structural": { "type": "integer", "minimum": 0, "maximum": 30 },
+        "configuration": { "type": "integer", "minimum": 0, "maximum": 30 },
+        "type": { "type": "integer", "minimum": 0, "maximum": 30 }
+      }
+    },
+    "known_unknowns": {
+      "type": "array", "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["unknown_ref", "namespace", "relevance"],
+        "properties": {
+          "unknown_ref": { "type": "string", "pattern": "^gap_[a-z0-9_]+$" },
+          "namespace": { "const": "KNOWN_UNKNOWN" },
+          "relevance": { "const": "SELECTED_NEIGHBORHOOD_BOUNDARY" }
+        }
+      }
+    },
+    "truth_boundaries": { "type": "array", "minItems": 3, "items": { "type": "string", "minLength": 1 } },
+    "provenance": {
+      "type": "object", "additionalProperties": false,
+      "required": ["human_selection_artifact", "connectivity_exploration_artifact", "fact_pack_artifact", "human_selection_fingerprint_sha256", "connectivity_exploration_fingerprint_sha256", "selected_fact_source", "full_fact_space_loaded"],
+      "properties": {
+        "human_selection_artifact": { "$ref": "#/$defs/artifact" },
+        "connectivity_exploration_artifact": { "$ref": "#/$defs/artifact" },
+        "fact_pack_artifact": { "$ref": "#/$defs/artifact" },
+        "human_selection_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+        "connectivity_exploration_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+        "selected_fact_source": { "const": "SELECTED_NEIGHBORHOOD_ONLY" },
+        "full_fact_space_loaded": { "const": false }
+      }
+    },
+    "context_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+    "generation_metadata": { "$ref": "#/$defs/zeroExecution" }
+  },
+  "$defs": {
+    "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "factRefs": { "type": "array", "minItems": 2, "maxItems": 30, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "artifact": {
+      "type": "object", "additionalProperties": false, "required": ["artifact_path", "sha256"],
+      "properties": { "artifact_path": { "type": "string", "minLength": 1 }, "sha256": { "$ref": "#/$defs/sha256" } }
+    },
+    "fact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["canonical_fact_ref", "summary", "category", "predicate", "connection_scope", "limitations", "evidence_provenance"],
+      "properties": {
+        "canonical_fact_ref": { "type": "string", "minLength": 1 },
+        "summary": { "type": "string", "minLength": 1 },
+        "category": { "enum": ["STRUCTURAL", "BEHAVIORAL", "CONFIGURATION", "TYPE", "RELATION"] },
+        "predicate": { "enum": ["DECLARES", "DECLARES_TYPE", "EXPORTS", "IMPORTS", "CALLS", "SKIPS_WHEN", "CONCATENATES_WHEN", "THROWS_WHEN", "DECLARES_CONFIGURATION", "CONTAINS"] },
+        "connection_scope": { "enum": ["CROSS_MODULE", "SAME_MODULE", "NOT_APPLICABLE"] },
+        "limitations": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "evidence_provenance": {
+          "type": "object", "additionalProperties": false,
+          "required": ["evidence_ids", "repository_url", "repository_commit", "fact_ir_version", "fact_pack_artifact"],
+          "properties": {
+            "evidence_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+            "repository_url": { "type": "string", "format": "uri" },
+            "repository_commit": { "$ref": "#/$defs/commit" },
+            "fact_ir_version": { "enum": [1, 2] },
+            "fact_pack_artifact": { "$ref": "#/$defs/artifact" }
+          }
+        }
+      }
+    },
+    "zeroExecution": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "paid_api_requests", "real_model_requests", "secret_reads", "repository_executions"],
+      "properties": {
+        "mode": { "const": "deterministic_offline_neighborhood_editorial_context" },
+        "paid_api_requests": { "const": 0 },
+        "real_model_requests": { "const": 0 },
+        "secret_reads": { "const": 0 },
+        "repository_executions": { "const": 0 }
+      }
+    }
+  }
+}

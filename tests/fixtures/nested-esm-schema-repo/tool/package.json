@@ -1,0 +1,9 @@
+{
+  "name": "nested-esm-tool",
+  "version": "1.2.3",
+  "description": "A nested ESM package with a schema-backed renderer.",
+  "type": "module",
+  "bin": {
+    "nested-tool": "./bin/tool.mjs"
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:repo-artifact:schema:human-refinement-selection:v1",
+  "title": "HumanRefinementSelection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["human_refinement_selection_version", "status", "selection_id", "repository", "commit", "fact_ir_version", "base_candidate_id", "base_candidate_fingerprint_sha256", "refinement_context_fingerprint_sha256", "selected_additional_fact_refs", "selected_additional_canonical_fact_ids", "selected_fact_set", "selection_timestamp", "human_selected", "decision_context", "refined_angle_eligibility", "provenance", "selection_fingerprint_sha256", "generation_metadata"],
+  "properties": {
+    "human_refinement_selection_version": { "const": 1 },
+    "status": { "const": "VALID" },
+    "selection_id": { "type": "string", "pattern": "^refinement-selection-[0-9a-f]{16}$" },
+    "repository": { "$ref": "urn:repo-artifact:schema:grounded-fact-pack:v1#/$defs/repository" },
+    "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "fact_ir_version": { "const": 1 },
+    "base_candidate_id": { "type": "string", "minLength": 1 },
+    "base_candidate_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+    "refinement_context_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+    "selected_additional_fact_refs": { "$ref": "#/$defs/selectedRefs" },
+    "selected_additional_canonical_fact_ids": { "type": "array", "minItems": 1, "maxItems": 4, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "selected_fact_set": {
+      "type": "object", "additionalProperties": false,
+      "required": ["base_fact_refs", "selected_additional_fact_refs", "total_supporting_fact_refs"],
+      "properties": {
+        "base_fact_refs": { "type": "array", "minItems": 1, "maxItems": 8, "uniqueItems": true, "items": { "$ref": "#/$defs/factRef" } },
+        "selected_additional_fact_refs": { "$ref": "#/$defs/selectedRefs" },
+        "total_supporting_fact_refs": { "type": "array", "minItems": 2, "maxItems": 8, "uniqueItems": true, "items": { "$ref": "#/$defs/factRef" } }
+      }
+    },
+    "selection_timestamp": { "type": "string", "format": "date-time" },
+    "human_selected": { "const": true },
+    "decision_context": { "enum": ["USER_ACTION", "OFFLINE_FIXTURE"] },
+    "refined_angle_eligibility": { "type": "object", "additionalProperties": false, "required": ["eligible", "status", "reason", "explicit_refined_angle_generation_required", "real_model_authorized"], "properties": { "eligible": { "const": true }, "status": { "const": "ELIGIBLE" }, "reason": { "const": "CURRENT_HOST_VALIDATED_BASE_AND_VALID_HUMAN_FACT_SELECTION" }, "explicit_refined_angle_generation_required": { "const": true }, "real_model_authorized": { "const": false } } },
+    "provenance": { "type": "object", "additionalProperties": false, "required": ["refinement_context_artifact"], "properties": { "refinement_context_artifact": { "$ref": "urn:repo-artifact:schema:angle-refinement-context:v1#/$defs/artifactReference" } } },
+    "selection_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+    "generation_metadata": { "type": "object", "additionalProperties": false, "required": ["mode", "paid_api_requests", "real_model_requests", "secret_reads", "repository_executions"], "properties": { "mode": { "const": "offline_human_refinement_selection" }, "paid_api_requests": { "const": 0 }, "real_model_requests": { "const": 0 }, "secret_reads": { "const": 0 }, "repository_executions": { "const": 0 } } }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "factRef": { "type": "string", "pattern": "^fact_[0-9]{3}$" },
+    "selectedRefs": { "type": "array", "minItems": 1, "maxItems": 4, "uniqueItems": true, "items": { "$ref": "#/$defs/factRef" } }
+  }
+}

@@ -1,0 +1,926 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:repo-artifact:schema:codebase-brief:1",
+  "title": "CodebaseBrief v1",
+  "description": "The canonical, commit-pinned repository understanding object. Content angles and presentation artifacts are downstream objects and are intentionally not embedded here.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "codebase_brief_version",
+    "brief_id",
+    "generated_at",
+    "repository",
+    "analysis_scope",
+    "overview",
+    "technologies",
+    "entry_points",
+    "core_modules",
+    "relationships",
+    "data_flows",
+    "external_services",
+    "storage",
+    "important_symbols",
+    "claims",
+    "evidence",
+    "limitations",
+    "unknowns",
+    "overall_confidence",
+    "quality"
+  ],
+  "properties": {
+    "codebase_brief_version": {
+      "const": 1
+    },
+    "brief_id": {
+      "$ref": "#/$defs/id"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "repository": {
+      "$ref": "#/$defs/repository"
+    },
+    "analysis_scope": {
+      "$ref": "#/$defs/analysis_scope"
+    },
+    "overview": {
+      "$ref": "#/$defs/overview"
+    },
+    "technologies": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/technology"
+      },
+      "maxItems": 200
+    },
+    "entry_points": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/entry_point"
+      },
+      "maxItems": 100
+    },
+    "core_modules": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/core_module"
+      },
+      "maxItems": 50
+    },
+    "relationships": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/relationship"
+      },
+      "maxItems": 1000
+    },
+    "data_flows": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/data_flow"
+      },
+      "maxItems": 30
+    },
+    "external_services": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/named_fact"
+      },
+      "maxItems": 100
+    },
+    "storage": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/named_fact"
+      },
+      "maxItems": 100
+    },
+    "important_symbols": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/important_symbol"
+      },
+      "maxItems": 200
+    },
+    "claims": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/claim"
+      },
+      "maxItems": 1000
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:repo-artifact:schema:evidence-record:1"
+      },
+      "maxItems": 1000
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/limitation"
+      },
+      "maxItems": 100
+    },
+    "unknowns": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/unknown"
+      },
+      "maxItems": 100
+    },
+    "overall_confidence": {
+      "$ref": "#/$defs/confidence_assessment"
+    },
+    "quality": {
+      "$ref": "#/$defs/quality"
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,127}$"
+    },
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+    },
+    "fact_status": {
+      "enum": [
+        "verified",
+        "inferred",
+        "documentation",
+        "unknown"
+      ]
+    },
+    "evidence_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/id"
+      },
+      "uniqueItems": true,
+      "maxItems": 50
+    },
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "url",
+        "owner",
+        "name",
+        "default_branch",
+        "commit_sha",
+        "visibility",
+        "resolved_at"
+      ],
+      "properties": {
+        "url": {
+          "type": "string",
+          "pattern": "^https://github\\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?:\\.git)?/?$"
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "default_branch": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "commit_sha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "visibility": {
+          "const": "public"
+        },
+        "resolved_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "analysis_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "read_scope_ladder_version",
+        "highest_scope",
+        "scope_events",
+        "files_seen",
+        "files_read",
+        "files_skipped",
+        "bytes_read",
+        "context_tokens_budgeted",
+        "context_tokens_used",
+        "truncated",
+        "skip_summary"
+      ],
+      "properties": {
+        "read_scope_ladder_version": {
+          "const": 1
+        },
+        "highest_scope": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "scope_events": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "scope",
+              "reason",
+              "selected_paths"
+            ],
+            "properties": {
+              "scope": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 5
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500
+              },
+              "selected_paths": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/path"
+                },
+                "uniqueItems": true,
+                "maxItems": 200
+              }
+            }
+          }
+        },
+        "files_seen": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "files_read": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "files_skipped": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bytes_read": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "context_tokens_budgeted": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "context_tokens_used": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "skip_summary": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "reason",
+              "count"
+            ],
+            "properties": {
+              "reason": {
+                "enum": [
+                  "ignored_directory",
+                  "unsupported_type",
+                  "binary",
+                  "oversized_file",
+                  "generated_file",
+                  "symlink",
+                  "budget_exhausted",
+                  "not_selected",
+                  "other"
+                ]
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "overview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "project_name",
+        "one_sentence",
+        "summary",
+        "problem",
+        "target_users",
+        "status",
+        "evidence_ids"
+      ],
+      "properties": {
+        "project_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "one_sentence": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "problem": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "target_users": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "uniqueItems": true,
+          "maxItems": 20
+        },
+        "status": {
+          "$ref": "#/$defs/fact_status"
+        },
+        "evidence_ids": {
+          "$ref": "#/$defs/evidence_ids"
+        }
+      }
+    },
+    "technology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "status",
+        "evidence_ids"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "kind": {
+          "enum": [
+            "language",
+            "runtime",
+            "framework",
+            "library",
+            "tool",
+            "protocol"
+          ]
+        },
+        "declared_version": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "purpose": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "status": {
+          "$ref": "#/$defs/fact_status"
+        },
+        "evidence_ids": {
+          "$ref": "#/$defs/evidence_ids"
+        }
+      }
+    },
+    "entry_point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "source_path",
+        "role",
+        "status",
+        "evidence_ids"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "source_path": {
+          "$ref": "#/$defs/path"
+        },
+        "symbol": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "role": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "status": {
+          "$ref": "#/$defs/fact_status"
+        },
+        "evidence_ids": {
+          "$ref": "#/$defs/evidence_ids"
+        }
+      }
+    },
+    "core_module": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "responsibility",
+        "source_paths",
+        "status",
+        "confidence",
+        "evidence_ids"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "responsibility": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1500
+        },
+        "source_paths": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/path"
+          },
+          "uniqueItems": true,
+          "maxItems": 30
+        },
+        "status": {
+          "$ref": "#/$defs/fact_status"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "evidence_ids": {
+          "$ref": "#/$defs/evidence_ids"
+        }
+      }
+    },
+    "relationship": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from_module_id",
+        "to_module_id",
+        "relationship_type",
+        "description",
+        "status",
+        "confidence",
+        "evidence_ids"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "from_module_id": {
+          "$ref": "#/$defs/id"
+        },
+        "to_module_id": {
+          "$ref": "#/$defs/id"
+        },
+        "relationship_type": {
+          "enum": [
+            "imports",
+            "calls",
+            "reads",
+            "writes",
+            "configures",
+            "publishes",
+            "consumes",
+            "persists",
+            "returns",
+            "contains",
+            "other",
+            "unknown"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "status": {
+          "$ref": "#/$defs/fact_status"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "evidence_ids": {
+          "$ref": "#/$defs/evidence_ids"
+        }
+      }
+    },
+    "data_flow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "description",
+        "steps",
+        "status",
+        "evidence_ids"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 30,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "order",
+              "module_id",
+              "action",
+              "status",
+              "evidence_ids"
+            ],
+            "properties": {
+              "order": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "module_id": {
+                "$ref": "#/$defs/id"
+              },
+              "action": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500
+              },
+              "status": {
+                "$ref": "#/$defs/fact_status"
+              },
+              "evidence_ids": {
+                "$ref": "#/$defs/evidence_ids"
+              }
+            }
+          }
+        },
+        "status": {
+          "$ref": "#/$defs/fact_status"
+        },
+        "evidence_ids": {
+          "$ref": "#/$defs/evidence_ids"
+        }
+      }
+    },
+    "named_fact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "purpose",
+        "status",
+        "evidence_ids"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "purpose": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "status": {
+          "$ref": "#/$defs/fact_status"
+        },
+        "evidence_ids": {
+          "$ref": "#/$defs/evidence_ids"
+        }
+      }
+    },
+    "important_symbol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "source_path",
+        "role",
+        "status",
+        "evidence_ids"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "qualified_name": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "kind": {
+          "enum": [
+            "function",
+            "method",
+            "class",
+            "interface",
+            "type",
+            "module",
+            "variable",
+            "constant",
+            "other"
+          ]
+        },
+        "source_path": {
+          "$ref": "#/$defs/path"
+        },
+        "line_start": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "line_end": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "role": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "status": {
+          "$ref": "#/$defs/fact_status"
+        },
+        "evidence_ids": {
+          "$ref": "#/$defs/evidence_ids"
+        }
+      }
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "statement",
+        "category",
+        "status",
+        "confidence",
+        "evidence_ids",
+        "limitations"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1500
+        },
+        "category": {
+          "enum": [
+            "purpose",
+            "technology",
+            "entry_point",
+            "module",
+            "relationship",
+            "data_flow",
+            "external_service",
+            "storage",
+            "design_choice",
+            "limitation",
+            "other"
+          ]
+        },
+        "status": {
+          "$ref": "#/$defs/fact_status"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "evidence_ids": {
+          "$ref": "#/$defs/evidence_ids"
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "uniqueItems": true,
+          "maxItems": 20
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "verified",
+                  "inferred",
+                  "documentation"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "evidence_ids": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "limitation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "description",
+        "impact"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "impact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      }
+    },
+    "unknown": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "question",
+        "reason",
+        "next_evidence_needed"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "question": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "next_evidence_needed": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      }
+    },
+    "confidence_assessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "score",
+        "rationale"
+      ],
+      "properties": {
+        "score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1500
+        }
+      }
+    },
+    "quality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_valid",
+        "reference_integrity_valid",
+        "evidence_valid",
+        "confidence_escalation_checked",
+        "warnings"
+      ],
+      "properties": {
+        "schema_valid": {
+          "type": "boolean"
+        },
+        "reference_integrity_valid": {
+          "type": "boolean"
+        },
+        "evidence_valid": {
+          "type": "boolean"
+        },
+        "confidence_escalation_checked": {
+          "type": "boolean"
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "maxItems": 100
+        }
+      }
+    }
+  }
+}

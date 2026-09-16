@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:repo-artifact:schema:spoken-technical-style-profile:v1",
+  "title": "SpokenTechnicalStyleProfile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "spoken_technical_style_profile_version",
+    "language",
+    "audience",
+    "target_duration_seconds",
+    "tone",
+    "sentence_length",
+    "audit_language_density",
+    "technical_jargon_load",
+    "symbol_name_policy",
+    "fact_ids_spoken",
+    "avoid_repeated_sentence_pattern",
+    "forbidden_registers",
+    "truth_authority"
+  ],
+  "properties": {
+    "spoken_technical_style_profile_version": { "const": 1 },
+    "language": { "const": "zh-CN" },
+    "audience": {
+      "type": "array",
+      "prefixItems": [{ "const": "DEVELOPER" }, { "const": "VIBE_CODING_USER" }],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "target_duration_seconds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max"],
+      "properties": { "min": { "const": 60 }, "max": { "const": 90 } }
+    },
+    "tone": {
+      "type": "array",
+      "prefixItems": [
+        { "const": "NATURAL" },
+        { "const": "DIRECT" },
+        { "const": "TECHNICAL_CONVERSATIONAL" }
+      ],
+      "items": false,
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "sentence_length": { "const": "SHORT" },
+    "audit_language_density": { "const": "REDUCE" },
+    "technical_jargon_load": { "const": "MINIMUM_NECESSARY" },
+    "symbol_name_policy": { "const": "PRESERVE_EXACT" },
+    "fact_ids_spoken": { "const": false },
+    "avoid_repeated_sentence_pattern": { "const": true },
+    "forbidden_registers": {
+      "type": "array",
+      "prefixItems": [{ "const": "README" }, { "const": "AUDIT_REPORT" }],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "truth_authority": { "const": "NONE" }
+  }
+}

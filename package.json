@@ -1,0 +1,40 @@
+{
+  "name": "github-repo-guide",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "Understand public GitHub projects: purpose, setup, code structure and source-linked reports, with free or bring-your-own-model analysis.",
+  "license": "MIT",
+  "bin": {
+    "repo-artifact": "./dist/src/cli/index.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "npm run web",
+    "web": "npm run build --silent && node dist/src/web/index.js",
+    "cli": "npm run build --silent && node dist/src/cli/index.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:web": "npm run build --silent && node --test dist/tests/web-server.test.js",
+    "test": "npm run build && node --test"
+  },
+  "dependencies": {
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "typescript": "5.9.3",
+    "undici": "6.28.1"
+  },
+  "devDependencies": {
+    "@types/node": "20.19.43"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JasonYang-GJ/github-repo-guide.git"
+  },
+  "homepage": "https://github.com/JasonYang-GJ/github-repo-guide#readme",
+  "bugs": {
+    "url": "https://github.com/JasonYang-GJ/github-repo-guide/issues"
+  }
+}

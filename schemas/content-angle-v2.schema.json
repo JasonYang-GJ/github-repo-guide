@@ -1,0 +1,232 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:repo-artifact:schema:content-angle:v2",
+  "title": "ContentAngleV2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "content_angle_version",
+    "id",
+    "status",
+    "rank",
+    "repository",
+    "commit",
+    "fact_ir_version",
+    "canonical_grounded_brief_version",
+    "title",
+    "angle_type",
+    "editorial_thesis",
+    "editorial_reason",
+    "technical_basis",
+    "supporting_fact_ids",
+    "supporting_statement_ids",
+    "why_interesting",
+    "target_audience",
+    "confidence",
+    "novelty_assessment",
+    "educational_value",
+    "caveats",
+    "unknown_dependencies",
+    "external_claims",
+    "technical_entities",
+    "fact_mutation_requests",
+    "claimed_scope",
+    "editorial_scores"
+  ],
+  "properties": {
+    "content_angle_version": { "const": 2 },
+    "id": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["CANDIDATE", "ACCEPTED"] },
+    "rank": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "integer", "minimum": 1, "maximum": 3 }
+      ]
+    },
+    "repository": {
+      "$ref": "urn:repo-artifact:schema:grounded-fact-pack:v1#/$defs/repository"
+    },
+    "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "fact_ir_version": { "enum": [1, 2] },
+    "canonical_grounded_brief_version": { "const": 1 },
+    "title": { "type": "string", "minLength": 1 },
+    "angle_type": {
+      "enum": [
+        "ENGINEERING_BOUNDARY",
+        "ARCHITECTURE_PATTERN",
+        "LOCAL_BEHAVIOR",
+        "DESIGN_TRADEOFF",
+        "TYPE_SURFACE",
+        "PACKAGE_SURFACE",
+        "EVIDENCE_METHOD",
+        "EDUCATIONAL_INSIGHT",
+        "UNUSUAL_IMPLEMENTATION"
+      ]
+    },
+    "editorial_thesis": { "type": "string", "minLength": 1 },
+    "editorial_reason": { "type": "string", "minLength": 1 },
+    "technical_basis": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/technicalBasis" }
+    },
+    "supporting_fact_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "supporting_statement_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "why_interesting": { "type": "string", "minLength": 1 },
+    "target_audience": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "DEVELOPER",
+          "AI_ENGINEER",
+          "OPEN_SOURCE_MAINTAINER",
+          "TECH_CREATOR",
+          "GENERAL_TECH"
+        ]
+      }
+    },
+    "confidence": { "$ref": "#/$defs/confidence" },
+    "novelty_assessment": { "$ref": "#/$defs/novelty" },
+    "educational_value": { "type": "string", "minLength": 1 },
+    "caveats": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "unknown_dependencies": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "external_claims": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "technical_entities": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/technicalEntity" }
+    },
+    "fact_mutation_requests": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "claimed_scope": { "enum": ["LOCAL", "MODULE", "PACKAGE", "PROJECT"] },
+    "editorial_scores": { "$ref": "#/$defs/editorialScores" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "CANDIDATE" } } },
+      "then": { "properties": { "rank": { "type": "null" } } }
+    },
+    {
+      "if": { "properties": { "status": { "const": "ACCEPTED" } } },
+      "then": {
+        "properties": {
+          "rank": { "type": "integer", "minimum": 1, "maximum": 3 }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "technicalBasis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fact_id",
+        "canonical_statement_id",
+        "subject_ref",
+        "predicate",
+        "object_ref",
+        "scope"
+      ],
+      "properties": {
+        "fact_id": { "type": "string", "minLength": 1 },
+        "canonical_statement_id": {
+          "oneOf": [
+            { "type": "string", "minLength": 1 },
+            { "type": "null" }
+          ]
+        },
+        "subject_ref": { "type": "string", "minLength": 1 },
+        "predicate": {
+          "enum": [
+            "DECLARES",
+            "DECLARES_TYPE",
+            "EXPORTS",
+            "IMPORTS",
+            "CALLS",
+            "SKIPS_WHEN",
+            "CONCATENATES_WHEN",
+            "THROWS_WHEN",
+            "DECLARES_CONFIGURATION",
+            "CONTAINS"
+          ]
+        },
+        "object_ref": { "type": "string", "minLength": 1 },
+        "scope": { "enum": ["LOCAL", "MODULE", "PACKAGE"] }
+      }
+    },
+    "technicalEntity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entity_ref", "label"],
+      "properties": {
+        "entity_ref": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 }
+      }
+    },
+    "confidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "basis", "rationale"],
+      "properties": {
+        "level": { "enum": ["LOW", "MEDIUM", "HIGH"] },
+        "basis": { "const": "EDITORIAL_JUDGMENT_NOT_FACT_VERIFICATION" },
+        "rationale": { "type": "string", "minLength": 1 }
+      }
+    },
+    "novelty": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "claim_boundary", "rationale"],
+      "properties": {
+        "status": {
+          "enum": ["NOT_RESEARCHED", "REPOSITORY_LOCAL_ONLY", "EXTERNALLY_RESEARCHED"]
+        },
+        "claim_boundary": { "const": "NO_EXTERNAL_NOVELTY_CLAIM" },
+        "rationale": { "type": "string", "minLength": 1 }
+      }
+    },
+    "editorialScores": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "technical_significance",
+        "educational_value",
+        "clarity",
+        "evidence_strength",
+        "distinctiveness",
+        "content_potential"
+      ],
+      "properties": {
+        "technical_significance": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "educational_value": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "clarity": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "evidence_strength": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "distinctiveness": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "content_potential": { "type": "integer", "minimum": 0, "maximum": 3 }
+      }
+    }
+  }
+}

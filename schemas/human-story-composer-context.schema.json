@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:repo-artifact:schema:human-story-composer-context:v1",
+  "title": "HumanStoryComposerContext v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["human_story_composer_context_version", "composer_context_version", "status", "repository", "commit", "fact_ir_version", "host_semantics_version", "neighborhood", "minimal_project_identity", "fact_options", "known_unknowns", "verified_boundary", "not_proven_boundary", "provenance", "generation_metadata", "context_fingerprint_sha256"],
+  "properties": {
+    "human_story_composer_context_version": { "const": 1 },
+    "composer_context_version": { "const": 1 },
+    "status": { "const": "READY" },
+    "repository": { "$ref": "urn:repo-artifact:schema:grounded-fact-pack:v1#/$defs/repository" },
+    "commit": { "$ref": "#/$defs/commit" },
+    "fact_ir_version": { "enum": [1, 2] },
+    "host_semantics_version": { "const": 2 },
+    "neighborhood": {
+      "type": "object", "additionalProperties": false,
+      "required": ["neighborhood_id", "neighborhood_fingerprint_sha256", "seed_label"],
+      "properties": {
+        "neighborhood_id": { "type": "string", "pattern": "^neighborhood_[0-9a-f]{16}$" },
+        "neighborhood_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+        "seed_label": { "type": "string", "minLength": 1 }
+      }
+    },
+    "minimal_project_identity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["repository_full_name", "technical_area", "selected_module_paths"],
+      "properties": {
+        "repository_full_name": { "type": "string", "pattern": "^[^/]+/[^/]+$" },
+        "technical_area": { "type": "string", "minLength": 1 },
+        "selected_module_paths": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "fact_options": { "type": "array", "minItems": 1, "maxItems": 30, "items": { "$ref": "#/$defs/factOption" } },
+    "known_unknowns": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/knownUnknown" } },
+    "verified_boundary": { "$ref": "#/$defs/nonEmptyStrings" },
+    "not_proven_boundary": { "$ref": "#/$defs/nonEmptyStrings" },
+    "provenance": {
+      "type": "object", "additionalProperties": false,
+      "required": ["neighborhood_editorial_context", "source_context_fingerprint_sha256", "selected_fact_source", "full_fact_space_loaded"],
+      "properties": {
+        "neighborhood_editorial_context": { "$ref": "#/$defs/artifact" },
+        "source_context_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+        "selected_fact_source": { "const": "SELECTED_NEIGHBORHOOD_ONLY" },
+        "full_fact_space_loaded": { "const": false }
+      }
+    },
+    "generation_metadata": { "$ref": "#/$defs/zeroExecution" },
+    "context_fingerprint_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "artifact": {
+      "type": "object", "additionalProperties": false, "required": ["artifact_path", "sha256"],
+      "properties": { "artifact_path": { "type": "string", "minLength": 1 }, "sha256": { "$ref": "#/$defs/sha256" } }
+    },
+    "nonEmptyStrings": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "factOption": {
+      "type": "object", "additionalProperties": false,
+      "required": ["display_id", "plain_language_summary", "fact_kind", "canonical_fact_id", "evidence_available", "source_location", "boundary_note", "evidence_trace", "host_truth"],
+      "properties": {
+        "display_id": { "type": "string", "pattern": "^F[1-9][0-9]*$" },
+        "plain_language_summary": { "type": "string", "minLength": 1 },
+        "fact_kind": { "enum": ["DIRECT_STATIC_CALL", "LOCAL_THROW_BRANCH"] },
+        "canonical_fact_id": { "type": "string", "minLength": 1 },
+        "evidence_available": { "const": true },
+        "source_location": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object", "additionalProperties": false, "required": ["path", "line_start", "line_end"],
+              "properties": { "path": { "type": "string", "minLength": 1 }, "line_start": { "type": "null" }, "line_end": { "type": "null" } }
+            }
+          ]
+        },
+        "boundary_note": { "type": "string", "minLength": 1 },
+        "evidence_trace": {
+          "type": "object", "additionalProperties": false,
+          "required": ["evidence_ids", "repository_url", "repository_commit", "fact_ir_version", "fact_pack_artifact"],
+          "properties": {
+            "evidence_ids": { "$ref": "#/$defs/nonEmptyStrings" },
+            "repository_url": { "type": "string", "format": "uri" },
+            "repository_commit": { "$ref": "#/$defs/commit" },
+            "fact_ir_version": { "enum": [1, 2] },
+            "fact_pack_artifact": { "$ref": "#/$defs/artifact" }
+          }
+        },
+        "host_truth": {
+          "type": "object", "additionalProperties": false,
+          "required": ["subject", "predicate", "object", "scope", "limitations"],
+          "properties": {
+            "subject": { "type": "string", "minLength": 1 },
+            "predicate": { "enum": ["CALLS", "THROWS_WHEN"] },
+            "object": { "type": "string", "minLength": 1 },
+            "scope": { "enum": ["LOCAL", "MODULE"] },
+            "limitations": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+          }
+        }
+      }
+    },
+    "knownUnknown": {
+      "type": "object", "additionalProperties": false,
+      "required": ["unknown_ref", "plain_language_summary", "namespace"],
+      "properties": {
+        "unknown_ref": { "type": "string", "pattern": "^gap_[a-z0-9_]+$" },
+        "plain_language_summary": { "type": "string", "minLength": 1 },
+        "namespace": { "const": "KNOWN_UNKNOWN" }
+      }
+    },
+    "zeroExecution": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "paid_api_requests", "real_model_requests", "secret_reads", "repository_executions"],
+      "properties": {
+        "mode": { "const": "deterministic_offline_human_story_composer" },
+        "paid_api_requests": { "const": 0 },
+        "real_model_requests": { "const": 0 },
+        "secret_reads": { "const": 0 },
+        "repository_executions": { "const": 0 }
+      }
+    }
+  }
+}

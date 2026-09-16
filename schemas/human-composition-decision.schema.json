@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:repo-artifact:schema:human-composition-decision:v1",
+  "title": "HumanCompositionDecisionArtifact v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["human_composition_decision_version", "composition_id", "composition_status", "source", "repository", "commit", "fact_ir_version", "host_semantics_version", "neighborhood_id", "neighborhood_fingerprint_sha256", "composer_context_fingerprint_sha256", "draft_fingerprint_sha256", "validation_fingerprint_sha256", "title", "editorial_thesis", "why_this_story", "target_audience", "selected_fact_display_ids", "selected_canonical_fact_ids", "selected_known_unknowns", "known_caveats", "host_validation", "human_confirmed", "confirmation_timestamp", "decision_context", "script_eligibility", "generation_metadata", "decision_fingerprint_sha256"],
+  "properties": {
+    "human_composition_decision_version": { "const": 1 },
+    "composition_id": { "type": "string", "pattern": "^composition_[a-z0-9_]+$" },
+    "composition_status": { "const": "HUMAN_CONFIRMED" },
+    "decision_id": { "type": "string", "pattern": "^decision_[0-9a-f]{24}$" },
+    "source": { "enum": ["HUMAN_COMPOSITION", "HUMAN"] },
+    "repository": { "$ref": "urn:repo-artifact:schema:grounded-fact-pack:v1#/$defs/repository" },
+    "commit": { "$ref": "#/$defs/commit" },
+    "fact_ir_version": { "enum": [1, 2] },
+    "host_semantics_version": { "enum": [2, 3] },
+    "neighborhood_id": { "type": "string", "pattern": "^neighborhood_[0-9a-f]{16}$" },
+    "neighborhood_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+    "composer_context_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+    "draft_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+    "validation_fingerprint_sha256": { "$ref": "#/$defs/sha256" },
+    "title": { "type": "string", "minLength": 1 },
+    "editorial_thesis": { "type": "string", "minLength": 1 },
+    "why_this_story": { "type": "string", "minLength": 1 },
+    "target_audience": { "$ref": "#/$defs/nonEmptyStrings" },
+    "selected_fact_display_ids": { "$ref": "#/$defs/nonEmptyStrings" },
+    "selected_canonical_fact_ids": { "$ref": "#/$defs/nonEmptyStrings" },
+    "selected_known_unknowns": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "known_caveats": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "host_validation": { "$ref": "#/$defs/hostValidation" },
+    "human_confirmed": { "const": true },
+    "confirmation_timestamp": { "type": "string", "format": "date-time" },
+    "decision_context": { "enum": ["USER_ACTION", "OFFLINE_FIXTURE"] },
+    "script_eligibility": {
+      "type": "object", "additionalProperties": false,
+      "required": ["eligible", "status", "explicit_script_generation_required"],
+      "properties": {
+        "eligible": { "const": true },
+        "status": { "const": "ELIGIBLE_FOR_EXPLICIT_SCRIPT_ACTION" },
+        "explicit_script_generation_required": { "const": true }
+      }
+    },
+    "generation_metadata": { "$ref": "#/$defs/zeroExecution" },
+    "decision_fingerprint_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "nonEmptyStrings": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "hostValidation": {
+      "type": "object", "additionalProperties": false, "required": ["status", "host_semantics_version", "validation_fingerprint_sha256"],
+      "properties": { "status": { "const": "PASS" }, "host_semantics_version": { "enum": [2, 3] }, "validation_fingerprint_sha256": { "$ref": "#/$defs/sha256" } }
+    },
+    "zeroExecution": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "paid_api_requests", "real_model_requests", "secret_reads", "repository_executions"],
+      "properties": {
+        "mode": { "const": "offline_human_composition_confirmation" },
+        "paid_api_requests": { "const": 0 }, "real_model_requests": { "const": 0 }, "secret_reads": { "const": 0 }, "repository_executions": { "const": 0 }
+      }
+    }
+  }
+}
