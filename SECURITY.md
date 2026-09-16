@@ -14,9 +14,10 @@ hosted service and does not accept private repositories.
   install, import, build, test or execute target repository code.
 - The Web flow defaults to `deterministic-v1`. Every paid provider is explicit opt-in and
   requires paid-use consent.
-- GitHub tokens and model API keys are accepted only in bounded same-origin
-  POST bodies. They are request-scoped and are never echoed, logged, persisted,
-  cached, downloaded or written to analysis artifacts.
+- GitHub tokens are accepted only in bounded same-origin POST bodies. They are
+  request-scoped and are never echoed, logged, persisted, cached, downloaded or
+  written to analysis artifacts. Custom model API keys can be saved only through
+  the loopback credential API described below.
 - For GitHub and legacy fixed-preset API routes only, the loopback executable may use `GITHUB_TOKEN`, `DEEPSEEK_API_KEY`,
   `OPENAI_API_KEY`, `ZHIPU_API_KEY`, `DASHSCOPE_API_KEY` or `DASHSCOPE_INTL_API_KEY` from its
   process environment. Reusable server embeddings disable that fallback unless
@@ -27,10 +28,17 @@ hosted service and does not accept private repositories.
   Redirects are not followed; bodies are capped at 2 MiB and requests time out.
   Proxy environment variables are not used by this pinned transport.
 - Custom keys are isolated by connection and NEVER inherit environment keys.
-  Endpoint/protocol edits clear old keys; changes revoke paid-use consent.
-  Only non-secret name/URL/protocol/model metadata persists in browser localStorage;
-  keys remain in page memory and are lost on reload. Free analysis never creates
-  a paid model client or uses a model key.
+  Non-secret name/URL/protocol/model metadata persists in browser localStorage.
+  On Windows, saved keys are encrypted with DPAPI in the `CurrentUser` scope and
+  stored as ciphertext under `%LOCALAPPDATA%\GitHubRepoGuide\credentials.v1.json`.
+  The page receives only saved-state metadata and the last four characters, never
+  the full stored key. Each record is bound to its provider Base URL and protocol;
+  changing either retires the old binding. Users can replace or delete a key, and
+  deleting a provider also deletes its key record. Free analysis never creates a
+  paid model client or uses a model key.
+- DPAPI protects the key at rest from other Windows users; it does not protect a
+  compromised current account or a process already running as that user. The
+  loopback service must not be exposed to untrusted local software or the network.
 - Legacy preset API routes retain their fixed HTTPS origins/environment behavior
   for backwards compatibility; the new Web manager does not use those routes.
 - User-approved model hosts are supplied separately to the quality gate. Repository

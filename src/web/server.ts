@@ -37,6 +37,12 @@ import {
   isAnalysisLocale,
   type AnalysisLocale,
 } from "../presentation/locale.js";
+import {
+  CredentialStoreError,
+  DisabledCredentialStore,
+  type CredentialBinding,
+  type CredentialStore,
+} from "../security/credential-store.js";
 
 const MAX_REQUEST_BYTES = 8 * 1024;
 const MAX_VISIBLE_EVIDENCE = 120;
@@ -49,6 +55,7 @@ const STATIC_ASSETS = new Map([
   ["/app.css", "app.css"],
   ["/app.js", "app.js"],
   ["/provider-manager.js", "provider-manager.js"],
+  ["/local-translation.js", "local-translation.js"],
 ]);
 
 const DOWNLOADABLE_ARTIFACTS = new Set([
@@ -82,6 +89,7 @@ export interface WebServerOptions {
   ) => ModelProvider;
   readonly generatedAt?: string;
   readonly networkHosts?: readonly string[];
+  readonly credentialStore?: CredentialStore;
 }
 
 type WebProvider = "deterministic" | "custom" | WebModelProvider;
@@ -89,7 +97,7 @@ type GitHubAuthMode = "anonymous" | "token";
 
 interface ResolvedCredential {
   readonly value: string;
-  readonly source: "request" | "environment" | "none";
+  readonly source: "request" | "environment" | "stored" | "none";
 }
 
 interface RequestFailure extends Error {
@@ -104,6 +112,10 @@ interface RunDownload {
 
 function requestFailure(status: number, code: string, message: string): RequestFailure {
   return Object.assign(new Error(message), { status, code });
+}
+
+function credentialBinding(configuration: { readonly baseUrl: string; readonly apiFormat: CredentialBinding["apiFormat"] }): CredentialBinding {
+  return { baseUrl: configuration.baseUrl, apiFormat: configuration.apiFormat };
 }
 
 function validatedModel(provider: WebModelProvider, value: unknown): string {
@@ -377,10 +389,14 @@ function assetContentType(path: string): string {
 }
 
 function sameOrigin(request: IncomingMessage): boolean {
-  const origin = request.headers.origin;
-  if (origin === undefined) return true;
   const host = request.headers.host;
   if (host === undefined) return false;
+  let hostname: string;
+  try { hostname = new URL(`http://${host}`).hostname.toLowerCase(); }
+  catch { return false; }
+  if (hostname !== "127.0.0.1" && hostname !== "localhost") return false;
+  const origin = request.headers.origin;
+  if (origin === undefined) return true;
   return origin === `http://${host}` || origin === `https://${host}`;
 }
 
@@ -744,6 +760,7 @@ export function createWebServer(options: WebServerOptions = {}): Server {
   const githubFetch = options.githubFetch ?? fetch;
   const deepseekFetch = options.deepseekFetch ?? fetch;
   const modelFetch = options.modelFetch ?? fetch;
+  const credentialStore = options.credentialStore ?? new DisabledCredentialStore();
   const environmentGitHubToken =
     allowEnvironmentCredentials && (environment.GITHUB_TOKEN?.trim().length ?? 0) > 0;
   const runDownloads = new Map<string, RunDownload>();
@@ -783,7 +800,7 @@ export function createWebServer(options: WebServerOptions = {}): Server {
             anonymous_supported: true,
             environment_credential_available: environmentGitHubToken,
           },
-          credential_storage: "request_only",
+          credential_storage: credentialStore.kind,
           target_repository_execution: false,
         };
         if (method === "HEAD") {
@@ -791,6 +808,50 @@ export function createWebServer(options: WebServerOptions = {}): Server {
         } else {
           sendJson(response, 200, payload);
         }
+        return;
+      }
+
+      if (url.pathname === "/api/credentials") {
+        if (method !== "GET" && method !== "POST") {
+          response.setHeader("Allow", "GET, POST");
+          sendJson(response, 405, { error: { code: "METHOD_NOT_ALLOWED", message: "密钥记录只支持读取或保存。" } });
+          return;
+        }
+        if (!sameOrigin(request)) {
+          sendJson(response, 403, { error: { code: "ORIGIN_REJECTED", message: "请求来源与本地应用不一致。" } });
+          return;
+        }
+        if (method === "GET") {
+          sendJson(response, 200, { storage: credentialStore.kind, credentials: await credentialStore.list() });
+          return;
+        }
+        const body = await readJsonBody(request);
+        if (
+          typeof body.providerId !== "string" ||
+          Object.keys(body).some(key => !["providerId", "configuration", "apiKey"].includes(key))
+        ) {
+          throw requestFailure(400, "INVALID_REQUEST", "保存密钥需要供应商记录、连接配置和 API Key。");
+        }
+        const configuration = parseCustomConnection(body.configuration);
+        const apiKey = requestCredential(body.apiKey, "API Key");
+        if (!apiKey) throw requestFailure(400, "MODEL_API_KEY_REQUIRED", "请填写要保存的 API Key。");
+        const summary = await credentialStore.put(body.providerId, credentialBinding(configuration), apiKey);
+        sendJson(response, 200, { credential: summary });
+        return;
+      }
+
+      const credentialMatch = /^\/api\/credentials\/([A-Za-z0-9-]{1,80})$/.exec(url.pathname);
+      if (credentialMatch !== null) {
+        if (method !== "DELETE") {
+          response.setHeader("Allow", "DELETE");
+          sendJson(response, 405, { error: { code: "METHOD_NOT_ALLOWED", message: "此接口只支持删除密钥记录。" } });
+          return;
+        }
+        if (!sameOrigin(request)) {
+          sendJson(response, 403, { error: { code: "ORIGIN_REJECTED", message: "请求来源与本地应用不一致。" } });
+          return;
+        }
+        sendJson(response, 200, { deleted: await credentialStore.delete(credentialMatch[1] ?? "") });
         return;
       }
 
@@ -904,6 +965,7 @@ export function createWebServer(options: WebServerOptions = {}): Server {
           "githubToken",
           "deepseekApiKey",
           "apiKey",
+          "credentialId",
           "model",
           "customProvider",
           "paidModelConsent",
@@ -929,6 +991,9 @@ export function createWebServer(options: WebServerOptions = {}): Server {
         const profile = isWebModelProvider(providerSelection) ? WEB_MODEL_PROFILES[providerSelection] : undefined;
         const selectedModel = custom?.model ?? (isWebModelProvider(providerSelection) ? validatedModel(providerSelection, body.model) : undefined);
         if (custom && (body.deepseekApiKey !== undefined || body.model !== undefined)) throw requestFailure(400, "INVALID_REQUEST", "自定义连接请使用独立配置与 apiKey，不可混入旧版密钥或模型字段。");
+        if (body.credentialId !== undefined && (providerSelection !== "custom" || body.apiKey !== undefined || typeof body.credentialId !== "string")) {
+          throw requestFailure(400, "INVALID_REQUEST", "已保存密钥只能用于对应的自定义供应商，且不可与临时 API Key 同时提交。");
+        }
         if (profile && body.deepseekApiKey !== undefined && (providerSelection !== "deepseek" || body.apiKey !== undefined)) {
           throw requestFailure(400, "INVALID_REQUEST", "旧版 DeepSeek 密钥字段不可用于其他服务商，也不可与 apiKey 同时使用。");
         }
@@ -939,16 +1004,25 @@ export function createWebServer(options: WebServerOptions = {}): Server {
           environment,
           allowEnvironmentCredentials,
         );
-        const deepseekCredential =
-          profile !== undefined
-            ? resolveCredential(
-                body.apiKey ?? body.deepseekApiKey,
-                `${profile.label} API Key`,
-                profile.env,
-                environment,
-                allowEnvironmentCredentials,
-              )
-            : custom ? { value: requestCredential(body.apiKey, "API Key"), source: "request" as const } : ({ value: "", source: "none" } as const);
+        let deepseekCredential: ResolvedCredential;
+        if (profile !== undefined) {
+          deepseekCredential = resolveCredential(
+            body.apiKey ?? body.deepseekApiKey,
+            `${profile.label} API Key`,
+            profile.env,
+            environment,
+            allowEnvironmentCredentials,
+          );
+        } else if (custom && typeof body.credentialId === "string") {
+          const stored = await credentialStore.resolve(body.credentialId, credentialBinding(custom));
+          deepseekCredential = stored === undefined
+            ? { value: "", source: "none" }
+            : { value: requestCredential(stored, "Stored API Key"), source: "stored" };
+        } else if (custom) {
+          deepseekCredential = { value: requestCredential(body.apiKey, "API Key"), source: "request" };
+        } else {
+          deepseekCredential = { value: "", source: "none" };
+        }
         if (providerSelection !== "deterministic" && body.paidModelConsent !== true) {
           throw requestFailure(
             400,
@@ -1055,6 +1129,11 @@ export function createWebServer(options: WebServerOptions = {}): Server {
     } catch (error) {
       if (error instanceof ConnectionConfigurationError) {
         sendJson(response, 400, { error: { code: error.code, message: error.message } });
+        return;
+      }
+      if (error instanceof CredentialStoreError) {
+        const status = error.code === "CREDENTIAL_STORAGE_UNAVAILABLE" ? 503 : error.code === "CREDENTIAL_DESTINATION_MISMATCH" ? 409 : 400;
+        sendJson(response, status, { error: { code: error.code, message: error.message } });
         return;
       }
       if (

@@ -14,6 +14,7 @@ export interface GuideExcerpt {
 }
 
 export interface ProjectGuide {
+  readonly translation_literals?: readonly string[];
   readonly name: string;
   readonly summary: string;
   readonly problem: string;
@@ -32,10 +33,17 @@ export interface ProjectGuide {
 }
 
 function plain(value: string): string {
-  return value.replace(/!\[[^\]]*\]\([^)]*\)/g, "")
+  const code: string[] = [];
+  let prefix = "INLINECODEPLACEHOLDER";
+  while (value.includes(prefix)) prefix += "X";
+  const masked = value.replace(/(`+)([^`\r\n]+)\1/g, (_match, _ticks, text: string) => {
+    code.push(text); return `${prefix}${code.length - 1}END`;
+  });
+  return masked.replace(/!\[[^\]]*\]\([^)]*\)/g, "")
     .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
     .replace(/<[^>]*>/g, "").replace(/^[\s>*+-]+/, "")
-    .replace(/[`*_~]/g, "").replace(/\s+/g, " ").trim();
+    .replace(/[`*_~]/g, "").replace(/\s+/g, " ").trim()
+    .replace(new RegExp(`${prefix}(\\d+)END`, "g"), (_match, index: string) => code[Number(index)] ?? "");
 }
 
 export function buildProjectGuide(
@@ -50,6 +58,7 @@ export function buildProjectGuide(
     : /^(?:readme|readme[_.-]en)\.md$/i.test(path);
   const readme = [...readmes].sort((a, b) => Number(preferred(b.path)) - Number(preferred(a.path)) || a.path.localeCompare(b.path))[0];
   const groups = { introduction: [] as GuideExcerpt[], features: [] as GuideExcerpt[], usage: [] as GuideExcerpt[], caveats: [] as GuideExcerpt[], audience: [] as GuideExcerpt[], problem: [] as GuideExcerpt[] };
+  const translationLiterals = new Set<string>();
   let name = snapshot.manifest.name;
   if (readme) {
     const lines = readme.text.split(/\r?\n/);
@@ -107,6 +116,10 @@ export function buildProjectGuide(
       const text = plain(parts.join(" "));
       if (text.length < (/[\u3400-\u9fff]/.test(text) ? 6 : 16) || /^(?:documentation|文档|english|中文)\s*[:：|｜]/i.test(text)) continue;
       if (groups[section].length >= 6) continue;
+      for (const match of parts.join(" ").matchAll(/(`+)([^`\r\n]+)\1/g)) {
+        const literal = match[2]!;
+        if (literal.length <= 700 && translationLiterals.size < 128) translationLiterals.add(literal);
+      }
       groups[section].push({ text: boundedText(text, 700), path: readme.path, line_start: start + 1, line_end: i,
         url: `${snapshot.repository.url}/blob/${snapshot.repository.commitSha}/${readme.path.split("/").map(encodeURIComponent).join("/")}#L${start + 1}-L${i}` });
     }
@@ -115,6 +128,7 @@ export function buildProjectGuide(
     `这是 ${snapshot.repository.owner} 发布的 ${snapshot.repository.name} 仓库。已读取的说明尚不足以确认其具体用途，请结合下面的源码结构判断。`,
     `This is ${snapshot.repository.name}, published by ${snapshot.repository.owner}. The selected documentation is insufficient to establish its purpose; consult the source structure below.`);
   return {
+    translation_literals: [...translationLiterals],
     name, summary,
     problem: groups.problem.map(item => item.text).join("\n\n"),
     audience: groups.audience.map(item => item.text),

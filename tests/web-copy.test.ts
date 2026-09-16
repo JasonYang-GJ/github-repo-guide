@@ -33,10 +33,10 @@ test("page replaces slogans with concrete scope and cost information", () => {
   assert.match(html, /不执行脚本或测试/);
 });
 
-test("key lifetime copy distinguishes page memory from persistent storage", () => {
+test("key lifetime copy explains Windows protection without exposing full secrets", () => {
   assert.doesNotMatch(html + script, /请求结束即丢弃|Discarded after request/);
-  assert.match(copy.COPY["zh-CN"]!.privacyBody!, /页面内存.*刷新后需重新填写/);
-  assert.match(copy.COPY.en!.privacyBody!, /page memory.*after reloading/);
+  assert.match(copy.COPY["zh-CN"]!.privacyBody!, /Windows 当前用户加密.*不会在页面回显完整内容/);
+  assert.match(copy.COPY.en!.privacyBody!, /current Windows user.*never returned in full/);
 });
 
 test("restyled page retains credential controls and report anchors with unique IDs", () => {

@@ -10,7 +10,7 @@
 4. 在“模型列表”填写真实模型 ID；点击“＋ 添加模型”可继续添加其他模型。
 5. 点击“添加供应商”。回到分析页面，选择供应商和模型，阅读目的地址与费用提示、勾选确认后再分析。
 
-支持编辑连接、增加/移除模型、确认后删除供应商。删除只移除本机浏览器中的连接配置和本页密钥，不会注销服务商账户。当前有界配置容量为 20 个连接、每个连接 30 个模型。
+支持编辑连接、增加/移除模型、单独删除密钥，以及确认后删除供应商和对应本机密钥记录；这些操作不会注销服务商账户。当前有界配置容量为 20 个连接、每个连接 30 个模型。
 
 ## 按协议兼容，不限制品牌
 
@@ -41,10 +41,12 @@ Anthropic 使用独立的 Messages 请求、系统字段和响应解析，不会
 
 ## 配置会保存吗？密钥会保存吗？
 
-- **非敏感连接配置会保存**：供应商名称、Base URL、协议、模型列表和兼容性选项，只保存在当前浏览器的 localStorage。不要在这些字段填秘密；不同浏览器、不同本机端口之间不自动共享。
-- **API Key 不持久保存**：仅保存在当前页面内存中，按连接分别保存；刷新或关闭页面后需要重填。程序不写入 localStorage/sessionStorage、项目文件、日志或报告。
-- 切换供应商会切换到该连接自己在本页保存的密钥，不借用其他连接的密钥。
-- 修改 Base URL 或 API 格式时，立即清掉该连接旧密钥；改完后需重新填写。这防止把原平台的密钥误发给新地址。
+- **非敏感连接配置会保存**：供应商名称、Base URL、协议、模型列表和兼容性选项，只保存在当前浏览器的 localStorage。不要在这些字段填秘密；不同浏览器或不同本机端口不会自动共享供应商列表。
+- **API Key 会安全保存到本机**：本地服务使用 Windows DPAPI 的 `CurrentUser` 范围加密，密文写入 `%LOCALAPPDATA%\GitHubRepoGuide\credentials.v1.json`。同一 Windows 用户刷新或重新打开页面后，可以从供应商历史记录直接使用。
+- 页面只读取“是否已保存、末四位、更新时间”，本地服务不会把完整密钥返回给网页。完整密钥只在保存时进入本地服务，并在发起已确认的模型请求时于本机内存解密。
+- 切换供应商会使用该连接自己的密钥记录，不借用其他连接的密钥。密钥记录与供应商 Base URL、API 格式绑定；修改任一项后，旧记录不会用于新目的地址。
+- 可单独删除密钥，也可在删除供应商时一并删除。删除本机记录不会注销服务商账户或撤销服务商控制台里的密钥。
+- 密钥不会写入 localStorage/sessionStorage、分析报告、下载产物或日志。DPAPI 不能防止已控制当前 Windows 账户的恶意程序使用密钥，因此仍不得公开本地端口。
 - 改模型、密钥或连接后，会撤销原先的费用确认。语言切换不产生模型请求。
 - 自定义连接不自动读取任何本机环境模型密钥，留空会明确提示需要填写。因此用户填自定义端点时不会动用维护者的账户。
 
@@ -84,9 +86,10 @@ connection/model and confirm its destination and charges before analyzing.
 
 Connections are user-managed, not restricted to a vendor catalogue. The app
 supports OpenAI-compatible Chat Completions and Anthropic Messages, not arbitrary
-protocols or running coding agents. Settings persist in this browser; keys are
-page-memory only and must be re-entered after reload. Endpoint/format edits clear
-old keys. Custom connections never borrow environment keys. Configuration checks
+protocols or running coding agents. Settings persist in this browser. Keys are
+protected for the current Windows user with DPAPI and remain selectable after
+reload without being returned in full to the page. Endpoint/format edits retire
+old key bindings. Custom connections never borrow environment keys. Configuration checks
 make no vendor request or inference and do not validate keys/balance. No live paid
 acceptance was performed. Public hosting and private-network model endpoints are
 outside this local release's security boundary.

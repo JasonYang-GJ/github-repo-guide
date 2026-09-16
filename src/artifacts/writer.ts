@@ -97,10 +97,12 @@ function renderGuide(guide: ProjectGuide, locale: AnalysisLocale): string {
     `### ${title}\n\n${excerpts.length ? excerpts.map(excerptText).join("\n\n") : localized(locale, "已读取的说明没有足够信息，暂不补充推测。", "The selected documentation does not provide enough information.")}`;
   const model = guide.model_interpretation;
   return [
+    localized(locale, "保留仓库引用，便于核对来源。", "Repository citations are preserved for checking."),
+    ...(model ? [`### ${localized(locale, "AI 详细解读（需结合原文核对）", "AI interpretation (check against the sources)")}\n\n${markdown(model.summary)}`] : [localized(locale, "本页为按规则整理的基础报告，不提供模型解读。", "This is a rule-based report without model interpretation.")]),
+    `### ${localized(locale, "仓库原文与引用", "Repository text and sources")}`,
     localized(locale, "以下为仓库说明的摘录整理，代表作者声明，未验证实际运行效果。", "The following excerpts reflect the repository author's documentation, not verified runtime outcomes."),
     markdown(guide.summary),
     section(localized(locale, "说明来源", "Introduction sources"), guide.introduction),
-    ...(model ? [`### ${localized(locale, "AI 详细解读（需结合原文核对）", "AI interpretation (check against the sources)")}\n\n${markdown(model.summary)}`] : []),
     `### ${localized(locale, "解决的问题", "Problem addressed")}${model?.problem ? localized(locale, "（AI 辅助判断，未验证）", " (AI interpretation, unverified)") : ""}\n\n${markdown(model?.problem || guide.problem || localized(locale, "已读取的说明没有明确陈述。", "Not explicitly stated in the selected documentation."))}`,
     `### ${localized(locale, "适合谁", "Audience")}${model?.audience.length ? localized(locale, "（AI 辅助判断，未验证）", " (AI interpretation, unverified)") : ""}\n\n${(model?.audience.length ? model.audience : guide.audience).map(item => `- ${markdown(item)}`).join("\n") || localized(locale, "暂未从说明中确认；不根据编程语言猜测用户。", "Not established by the documentation; language alone does not determine the audience.")}`,
     section(localized(locale, "主要功能与特点（文档声明）", "Capabilities (documented)"), guide.features),

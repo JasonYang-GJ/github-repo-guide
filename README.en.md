@@ -1,8 +1,8 @@
 # GitHub Repo Guide
 
-**Paste a public GitHub repository URL to get a source-linked report of its purpose, setup and code structure.**
+**Paste a public GitHub repository URL to generate a local, source-linked report: what it does, who it is for, how to start and how the code is organized.**
 
-For developers exploring unfamiliar projects, people learning from open source, and teams doing an initial technical review. Use free rule-based analysis or bring your own model API for additional interpretation.
+For developers exploring unfamiliar projects, people learning from open source, and teams doing an initial technical review. Basic analysis needs no API key; connect your own model API for deeper interpretation. Reports can be read in Chinese or English, with on-device translation in compatible browsers.
 
 [简体中文](README.md) · [Model setup](docs/model-providers.md) · [Security](SECURITY.md)
 
@@ -31,13 +31,21 @@ This is a **V0.2 local preview**, not a hosted multi-user service. No shared API
 - Downloadable Markdown reports, JSON data and Mermaid diagrams.
 - Chinese/English interface, with free analysis or user-managed model connections.
 
-Free mode organizes source text using fixed rules and does not translate it. AI mode adds interpretation using your API account. Supported formats are **OpenAI-compatible Chat Completions** and **Anthropic Messages**; vendors are not restricted to a predefined list. Not every protocol/model is compatible.
+Free mode organizes source text using fixed rules without calling a model. AI mode adds interpretation using your API account. Supported formats are **OpenAI-compatible Chat Completions** and **Anthropic Messages**; vendors are not restricted to a predefined list. Not every protocol/model is compatible.
 
-In AI mode, open **Manage providers**, enter a name, public HTTPS Base URL, API key, format and model IDs. Choose the connection/model and accept its destination and charges. Configuration checks do not contact the vendor or validate authentication/balance. See the [provider guide](docs/model-providers.md).
+The UI labels these modes **Basic analysis (free, no API)** and **AI in-depth explanation (your API)**. Basic mode grants or uses no model credits; both modes use local resources and are subject to GitHub access limits, which are separate from model billing.
+
+The top 中文 / EN switch is the only reading-language setting. Once a report is available, the page detects the source language automatically and translates when needed; there is no second source-language selector or translation button. Output targets are Chinese or English only. Translation is shown ahead of the originals, with code blocks and source links preserved. It is a reading aid, not a fact check or a whole-repository translation. Switching languages never calls a paid model, and server-generated reports and existing AI explanations are not overwritten.
+
+Automatic detection and translation use the browser's [Language Detector API](https://developer.chrome.com/docs/ai/language-detection) and [Translator API](https://developer.chrome.com/docs/ai/translator-api), checked at runtime. First use may download on-device language packs and use bandwidth, disk space and local compute, but no API key or model API balance. Text is not sent to a cloud model. Unsupported browsers or language pairs, detection failures and failed downloads keep the original report readable without a paid fallback. Automatic translation times out after two minutes; the current-result JSON can include a separate `reading_translation` field. Server-generated artifacts remain unchanged and reloading clears temporary translations. Unsupported and mobile browsers can still read originals or use their own model API.
+
+In AI mode, open **Manage providers**, enter a name, public HTTPS Base URL, API key, format and model IDs. The saved key is protected for the current Windows user and remains available after reload. The main page shows only its saved state and last four characters; use **Replace key** when needed. Choose the connection/model and accept its destination and charges. Configuration checks do not contact the vendor or validate authentication/balance. See the [provider guide](docs/model-providers.md).
 
 ## Privacy and limitations
 
-- Nonsecret settings persist in this browser. Entered keys remain only in page/request memory and must be re-entered after reload, not written to persistent storage, reports or logs.
+- Nonsecret settings persist in this browser. API keys are encrypted with Windows DPAPI for the current Windows user and stored as ciphertext under `%LOCALAPPDATA%\GitHubRepoGuide\credentials.v1.json`; saved provider records remain usable after reload without returning the full key to the page.
+- A saved key is bound to its provider Base URL and API format. Changing either retires the old binding and requires the matching key again. Keys can be deleted independently or with the provider record.
+- Keys are never written to browser localStorage, reports, downloads or logs. DPAPI does not protect a compromised Windows account. Do not expose the loopback service or commit real keys.
 - AI requests send repository text to your selected provider and may incur charges, including failed requests. Failed generation can fall back to a free report without paid retries.
 - GitHub credentials are separate from model keys. Custom connections do not borrow environment keys.
 - Only public GitHub repositories are supported. Reading is bounded; large repositories may be partially analyzed. Other languages use generic text analysis, not full language-specific call graphs.

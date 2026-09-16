@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 
+import { createPlatformCredentialStore } from "../security/credential-store.js";
 import { createWebServer } from "./server.js";
 
 function parsePort(value: string | undefined): number {
@@ -18,12 +19,13 @@ const server = createWebServer({
   outputRoot: resolve(process.cwd(), "output", "web"),
   schemaDirectory: resolve(process.cwd(), "schemas"),
   allowEnvironmentCredentials: true,
+  credentialStore: createPlatformCredentialStore(),
 });
 
 server.listen(port, host, () => {
   console.log(`Repository Artifact Core V0.2: http://${host}:${port}`);
   console.log("Default provider: deterministic-v1 (paid model providers require explicit opt-in)");
-  console.log("Credentials: request-scoped UI values or loopback process environment; never persisted");
+  console.log("Credentials: API keys can be protected for the current Windows user with DPAPI");
 });
 
 function stop(): void {

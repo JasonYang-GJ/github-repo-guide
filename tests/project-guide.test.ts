@@ -60,11 +60,28 @@ test("project guide keeps unknown purpose and audience unknown instead of guessi
   assert.deepEqual(guide.usage, []);
 });
 
+test("Chinese basic analysis retains an English-only README without pretending it was translated", async () => {
+  const text = "An English-only toolkit description for developers.";
+  const guide = buildProjectGuide(await snapshotWithDocs({ "README.md": `# Toolkit\n\n${text}` }), "zh-CN");
+  assert.equal(guide.summary, text);
+  assert.equal(guide.introduction[0]!.text, text);
+  assert.equal(guide.model_interpretation, null);
+  assert.match(guide.coverage, /没有安装或运行/);
+});
+
 test("a dedicated Overview section supplies the product purpose rather than falling back to package metadata", async () => {
   const snapshot = await snapshotWithDocs({ "README.md": "# Toolbox\n\n## Overview\n\nA local toolkit for developing and debugging applications.\n\n## Features\n\n- Inspect multiple local plugins and trace their dependencies." });
   const guide = buildProjectGuide(snapshot, "en");
   assert.match(guide.summary, /local toolkit/);
   assert.equal(guide.features.length, 1);
+});
+
+test("inline commands keep punctuation and are retained as translation literals", async () => {
+  const snapshot = await snapshotWithDocs({ "README.md": "# Toolkit\n\nRun `npx example_tool install --no-save` and read `CONFIG_FILE.md` for details." });
+  const guide = buildProjectGuide(snapshot, "zh-CN");
+  assert.match(guide.summary, /npx example_tool install --no-save/);
+  assert.match(guide.summary, /CONFIG_FILE.md/);
+  assert.deepEqual(guide.translation_literals, ["npx example_tool install --no-save", "CONFIG_FILE.md"]);
 });
 
 test("multiline HTML badges and numbered README sections do not become the project introduction", async () => {

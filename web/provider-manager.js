@@ -25,9 +25,12 @@ export function createProviderManager({ getLocale, onChange }) {
   const keyInput = $("#connection-api-key");
   const editor = $("#provider-editor-form");
   const editorKey = $("#provider-editor-key");
-  const keys = new Map(); // Page-memory only. Never passed to persistence.
+  const sessionKeys = new Map();
+  const storedKeys = new Map();
   let connections = [];
-  let storageProblem = false;
+  let configurationStorageProblem = false;
+  let credentialStorageProblem = false;
+  let credentialStorage = "loading";
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
@@ -37,12 +40,13 @@ export function createProviderManager({ getLocale, onChange }) {
       connections = parsed.map(metadata);
       if (new Set(connections.map(item => item.id)).size !== connections.length) throw new Error("Duplicate connections");
     }
-  } catch { storageProblem = true; }
+  } catch { configurationStorageProblem = true; }
   let selectedId = connections[0]?.id ?? "";
   let selectedModel = connections[0]?.models[0] ?? "";
   let editingId = null;
   let version = 0;
   let busy = false;
+  let replacingCredentialId = null;
 
   function selectedConnection() { return connections.find(item => item.id === selectedId); }
   function configuration(item, model) {
@@ -51,15 +55,56 @@ export function createProviderManager({ getLocale, onChange }) {
   }
   function selected() {
     const item = selectedConnection();
-    return item && item.models.includes(selectedModel) ? { configuration: configuration(item, selectedModel), apiKey: keys.get(item.id) || "" } : null;
+    if (!item || !item.models.includes(selectedModel)) return null;
+    const apiKey = sessionKeys.get(item.id) || "";
+    return {
+      configuration: configuration(item, selectedModel),
+      apiKey,
+      credentialId: !apiKey && storedKeys.has(item.id) ? item.id : "",
+    };
   }
   function status(message, failed = false) {
     $("#provider-editor-status").textContent = message;
     $("#provider-editor-status").dataset.state = failed ? "fail" : "";
   }
   function persist() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(connections.map(metadata))); storageProblem = false; }
-    catch { storageProblem = true; }
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(connections.map(metadata))); configurationStorageProblem = false; }
+    catch { configurationStorageProblem = true; }
+  }
+  async function credentialRequest(url, options = {}) {
+    const response = await fetch(url, options);
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error?.message || text("本机密钥操作失败。", "Local credential operation failed."));
+    return data;
+  }
+  async function loadCredentials() {
+    try {
+      const data = await credentialRequest("/api/credentials");
+      credentialStorage = data.storage;
+      storedKeys.clear();
+      for (const item of data.credentials || []) storedKeys.set(item.providerId, item);
+      credentialStorageProblem = false;
+    } catch {
+      credentialStorage = "unavailable";
+      credentialStorageProblem = true;
+    }
+    render(); renderEditorLabels(); onChange();
+  }
+  async function saveCredential(item, apiKey) {
+    const data = await credentialRequest("/api/credentials", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ providerId: item.id, configuration: configuration(item, item.models[0]), apiKey }),
+    });
+    storedKeys.set(item.id, data.credential);
+    credentialStorage = "windows_dpapi_current_user";
+    credentialStorageProblem = false;
+    return data.credential;
+  }
+  async function deleteCredential(id) {
+    await credentialRequest(`/api/credentials/${encodeURIComponent(id)}`, { method: "DELETE" });
+    storedKeys.delete(id);
+    sessionKeys.delete(id);
   }
   function option(value, label) {
     const element = document.createElement("option"); element.value = value; element.textContent = label; return element;
@@ -71,17 +116,50 @@ export function createProviderManager({ getLocale, onChange }) {
     modelPicker.replaceChildren(...(item ? item.models.map(id => option(id, id)) : [option("", text("尚无模型", "No models"))]));
     modelPicker.value = selectedModel;
     picker.disabled = !connections.length; modelPicker.disabled = !item;
-    keyInput.disabled = !item; keyInput.value = keys.get(selectedId) || "";
-    keyInput.placeholder = text("填写这个供应商自己的密钥（不保存）", "This provider's API key (not saved)");
+    const stored = storedKeys.get(selectedId);
+    const replacing = Boolean(item && stored && replacingCredentialId === item.id);
+    const loadingCredentials = credentialStorage === "loading";
+    const showSavedCredential = Boolean(item && stored && !replacing);
+    const showKeyEditor = Boolean(item && !loadingCredentials && (!stored || replacing));
+    $("#connection-key-saved").hidden = !showSavedCredential;
+    $("#connection-key-editor").hidden = !showKeyEditor;
+    keyInput.disabled = !showKeyEditor || busy;
+    keyInput.value = showKeyEditor ? sessionKeys.get(selectedId) || "" : "";
+    keyInput.placeholder = replacing
+      ? text("填写新的 API Key", "Enter the new API key")
+      : text("填写这个供应商自己的 API Key", "Enter this provider's API key");
+    $("#save-connection-key").disabled = !showKeyEditor || !keyInput.value || busy;
+    $("#cancel-connection-key").hidden = !replacing;
+    $("#cancel-connection-key").disabled = busy;
+    $("#replace-connection-key").disabled = !showSavedCredential || busy;
+    $("#clear-connection-key").disabled = !showSavedCredential || busy;
+    $("#connection-key-saved-title").textContent = text("密钥已安全保存", "API key saved securely");
+    $("#connection-key-saved-detail").textContent = stored
+      ? text(`尾号 ${stored.lastFour} · 刷新后可直接使用`, `Ends in ${stored.lastFour} · ready after reload`)
+      : "";
     $("#connection-empty").hidden = connections.length > 0;
     set("#connection-empty", "还没有供应商。点击“管理供应商”添加自己的 API 接点。", "No providers yet. Open Manage providers to add your API connection.");
     set("#connection-select-label", "模型供应商", "Model provider");
     set("#connection-model-label", "模型", "Model");
     set("#manage-providers", "管理供应商", "Manage providers");
+    set("#connection-api-key-label", replacing ? "新 API Key" : "API Key", replacing ? "New API key" : "API key");
+    set("#save-connection-key", replacing ? "保存新密钥" : "保存密钥", replacing ? "Save new key" : "Save key");
+    set("#cancel-connection-key", "取消更换", "Cancel replacement");
+    set("#replace-connection-key", "更换密钥", "Replace key");
+    set("#clear-connection-key", "删除密钥", "Delete key");
     $("#connection-destination").textContent = item ? `${item.apiFormat === "openai-chat" ? "Chat Completions" : "Anthropic Messages"} · ${item.baseUrl}` : "";
-    $("#connection-status").textContent = storageProblem
-      ? text("浏览器配置存储不可用或内容损坏；当前修改仅在本页有效。", "Browser configuration storage is unavailable or invalid; current changes are page-only.")
-      : text("配置保存在此浏览器；密钥仅在本页内存，刷新后需重填。不会借用本机环境密钥。", "Settings stay in this browser; keys stay only in page memory and must be re-entered after reload. Environment keys are never used.");
+    if (configurationStorageProblem) {
+      $("#connection-status").textContent = text("浏览器无法保存供应商配置；当前修改仅在本页有效。", "The browser cannot save provider settings; current changes are page-only.");
+    } else if (credentialStorageProblem) {
+      $("#connection-status").textContent = text("无法读取本机密钥记录；请确认本地服务正在运行。", "Saved credentials could not be loaded; confirm the local service is running.");
+    } else if (stored) {
+      $("#connection-status").textContent = "";
+    } else if (credentialStorage === "loading") {
+      $("#connection-status").textContent = text("正在读取本机密钥记录…", "Loading saved credentials…");
+    } else {
+      $("#connection-status").textContent = text("尚未保存密钥。填入后点击“保存密钥”。", "No saved key yet. Enter one, then choose Save key.");
+    }
+    $("#connection-status").dataset.state = credentialStorageProblem ? "fail" : "";
     renderSidebar();
   }
   function renderSidebar() {
@@ -94,7 +172,11 @@ export function createProviderManager({ getLocale, onChange }) {
       const button = document.createElement("button"); button.type = "button"; button.className = "provider-list-item";
       button.setAttribute("aria-pressed", String(item.id === editingId));
       const name = document.createElement("strong"); name.textContent = item.name;
-      const detail = document.createElement("small"); detail.textContent = `${item.models.length} ${text("个模型", "models")} · ${keys.has(item.id) ? text("已填密钥，未验证", "key entered, unverified") : text("需填写密钥", "key required")}`;
+      const stored = storedKeys.get(item.id);
+      const keyState = stored
+        ? text(`密钥已保存 · 尾号 ${stored.lastFour}`, `key saved · ends in ${stored.lastFour}`)
+        : sessionKeys.has(item.id) ? text("密钥待保存", "key not saved yet") : text("需填写密钥", "key required");
+      const detail = document.createElement("small"); detail.textContent = `${item.models.length} ${text("个模型", "models")} · ${keyState}`;
       button.append(name, detail); button.addEventListener("click", () => edit(item.id)); list.append(button);
     }
   }
@@ -115,13 +197,13 @@ export function createProviderManager({ getLocale, onChange }) {
     $("#provider-api-format").value = item?.apiFormat ?? "openai-chat";
     $("#provider-token-parameter").value = item?.tokenParameter ?? "max_tokens";
     $("#provider-json-mode").checked = item?.jsonMode ?? true;
-    editorKey.value = item ? keys.get(item.id) || "" : "";
+    editorKey.value = "";
     for (const model of item?.models ?? [""]) addModel(model);
     status(""); renderEditorLabels(); renderSidebar();
   }
   function renderEditorLabels() {
     set("#provider-list-heading", "我的模型供应商", "My model providers");
-    set("#provider-storage-note", "只记住连接配置，密钥不保存。", "Connection settings are saved. Keys are not.");
+    set("#provider-storage-note", "供应商和密钥记录保存在这台电脑；密钥由 Windows 当前用户加密。", "Providers and key records stay on this computer; keys are protected for the current Windows user.");
     set("#new-provider", "＋ 添加供应商", "+ Add provider");
     set("#provider-dialog-title", editingId ? "编辑模型供应商" : "添加模型供应商", editingId ? "Edit model provider" : "Add model provider");
     set("#provider-dialog-intro", "配置自己的 API 端点与模型，不限定供应商品牌。", "Configure your own API endpoint and models, without a vendor catalogue.");
@@ -137,7 +219,10 @@ export function createProviderManager({ getLocale, onChange }) {
     $("#delete-provider").hidden = !editingId;
     $("#provider-advanced").hidden = $("#provider-api-format").value !== "openai-chat";
     $("#provider-name").placeholder = text("如：我的 Kimi / Claude / 自建中转", "e.g. My Kimi / Claude / gateway");
-    editorKey.placeholder = text("自己的 API Key（仅保留在本页内存）", "Your API key (page-memory only)");
+    const stored = editingId ? storedKeys.get(editingId) : null;
+    editorKey.placeholder = stored
+      ? text(`已保存尾号 ${stored.lastFour}；留空继续使用，填写可替换`, `Saved key ends in ${stored.lastFour}; leave blank to keep it or enter a replacement`)
+      : text("自己的 API Key（保存后刷新仍可使用）", "Your API key (available after reload once saved)");
     $("#close-provider-dialog").setAttribute("aria-label", text("关闭", "Close"));
   }
   async function validateDraft(save) {
@@ -162,12 +247,20 @@ export function createProviderManager({ getLocale, onChange }) {
       if (!response.ok) { status(getLocale() === "en" ? "Invalid connection. Use a public HTTPS base URL and a valid model ID." : data.error?.message || "配置检查失败。", true); return; }
       if (!save) { status(text("配置格式通过；没有连接供应商，未验证密钥、余额或模型可用性。", "Configuration format passed; no provider connection. Key, balance and model availability are unverified.")); return; }
       draft = metadata({ ...draft, baseUrl: data.configuration.baseUrl });
+      const previous = connections.find(item => item.id === draft.id);
+      const destinationChanged = previous && (previous.baseUrl !== draft.baseUrl || previous.apiFormat !== draft.apiFormat);
+      if (draftKey) {
+        status(text("正在用 Windows 当前用户加密保存密钥…", "Protecting the key for the current Windows user…"));
+        await saveCredential(draft, draftKey);
+      } else if (destinationChanged && storedKeys.has(draft.id)) {
+        await deleteCredential(draft.id);
+      }
       const index = connections.findIndex(item => item.id === draft.id);
       if (index < 0) connections.push(draft); else connections[index] = draft;
-      if (draftKey) keys.set(draft.id, draftKey); else keys.delete(draft.id);
+      sessionKeys.delete(draft.id);
       selectedId = draft.id; selectedModel = draft.models[0]; persist(); render(); onChange();
       dialog.close(); editorKey.value = "";
-    } catch { if (before === version) status(text("无法连接本地服务，配置未保存。", "Cannot reach the local service. Configuration not saved."), true); }
+    } catch (error) { if (before === version) status(error instanceof Error ? error.message : text("无法连接本地服务，配置未保存。", "Cannot reach the local service. Configuration not saved."), true); }
     finally { busy = false; $("#save-provider").disabled = false; $("#check-provider").disabled = false; }
   }
   function open() { edit(selectedId || null); dialog.showModal(); $("#provider-name").focus(); }
@@ -178,21 +271,81 @@ export function createProviderManager({ getLocale, onChange }) {
   dialog.addEventListener("close", () => { version++; editorKey.value = ""; });
   editor.addEventListener("input", () => { version++; status(""); });
   for (const id of ["#provider-base-url", "#provider-api-format"]) $(id).addEventListener("input", () => {
-    editorKey.value = ""; if (editingId) keys.delete(editingId); render(); onChange(); renderEditorLabels();
-    status(text("地址或接口格式改变，旧密钥已清空。请填写新端点对应的密钥。", "Endpoint or API format changed. Old key cleared; enter the key for the new destination."));
+    editorKey.value = ""; renderEditorLabels();
+    status(text("地址或接口格式如有变化，保存时会停用旧密钥；请填写新端点对应的密钥。", "If the endpoint or API format changed, saving will retire the old key. Enter the key for the new destination."));
   });
   editor.addEventListener("submit", event => { event.preventDefault(); validateDraft(true); });
   $("#check-provider").addEventListener("click", () => validateDraft(false));
-  $("#delete-provider").addEventListener("click", () => {
+  $("#delete-provider").addEventListener("click", async () => {
     const item = connections.find(item => item.id === editingId);
-    if (!item || !confirm(text(`删除“${item.name}”的连接配置和本页密钥？不会注销服务商账户。`, `Delete ${item.name}'s connection and in-page key? This does not delete the provider account.`))) return;
-    connections = connections.filter(other => other.id !== item.id); keys.delete(item.id); version++;
-    if (selectedId === item.id) { selectedId = connections[0]?.id || ""; selectedModel = connections[0]?.models[0] || ""; }
-    persist(); render(); onChange(); edit(selectedId || null);
+    if (!item || busy || !confirm(text(`删除“${item.name}”及其本机密钥记录？不会注销服务商账户。`, `Delete ${item.name} and its local key record? This does not delete the provider account.`))) return;
+    busy = true; $("#delete-provider").disabled = true;
+    try {
+      if (storedKeys.has(item.id)) await deleteCredential(item.id);
+      connections = connections.filter(other => other.id !== item.id); sessionKeys.delete(item.id); version++;
+      if (replacingCredentialId === item.id) replacingCredentialId = null;
+      if (selectedId === item.id) { selectedId = connections[0]?.id || ""; selectedModel = connections[0]?.models[0] || ""; }
+      persist(); render(); onChange(); edit(selectedId || null);
+    } catch (error) {
+      status(error instanceof Error ? error.message : text("删除本机密钥记录失败。", "Failed to delete the local key record."), true);
+    } finally { busy = false; $("#delete-provider").disabled = false; }
   });
-  picker.addEventListener("change", () => { selectedId = picker.value; selectedModel = selectedConnection()?.models[0] || ""; render(); onChange(); });
+  picker.addEventListener("change", () => {
+    if (replacingCredentialId) sessionKeys.delete(replacingCredentialId);
+    replacingCredentialId = null; selectedId = picker.value; selectedModel = selectedConnection()?.models[0] || ""; render(); onChange();
+  });
   modelPicker.addEventListener("change", () => { selectedModel = modelPicker.value; onChange(); });
-  keyInput.addEventListener("input", () => { if (keyInput.value) keys.set(selectedId, keyInput.value); else keys.delete(selectedId); onChange(); });
-  $("#clear-connection-key").addEventListener("click", () => { keys.delete(selectedId); keyInput.value = ""; onChange(); renderSidebar(); });
-  return { selected, open, render: () => { render(); renderEditorLabels(); } };
+  keyInput.addEventListener("input", () => {
+    if (keyInput.value) sessionKeys.set(selectedId, keyInput.value); else sessionKeys.delete(selectedId);
+    $("#save-connection-key").disabled = !keyInput.value;
+    renderSidebar(); onChange();
+  });
+  $("#replace-connection-key").addEventListener("click", () => {
+    const item = selectedConnection();
+    if (!item || !storedKeys.has(item.id) || busy) return;
+    sessionKeys.delete(item.id); replacingCredentialId = item.id; render(); keyInput.focus(); onChange();
+  });
+  $("#cancel-connection-key").addEventListener("click", () => {
+    const item = selectedConnection();
+    if (!item || replacingCredentialId !== item.id || busy) return;
+    sessionKeys.delete(item.id); replacingCredentialId = null; keyInput.value = ""; render(); onChange();
+  });
+  $("#save-connection-key").addEventListener("click", async () => {
+    const item = selectedConnection();
+    const apiKey = keyInput.value.trim();
+    if (!item || !apiKey || busy) return;
+    busy = true; $("#save-connection-key").disabled = true; $("#cancel-connection-key").disabled = true;
+    $("#connection-status").textContent = text("正在用 Windows 当前用户加密保存密钥…", "Protecting the key for the current Windows user…");
+    $("#connection-status").dataset.state = "";
+    let succeeded = false;
+    try {
+      await saveCredential(item, apiKey);
+      sessionKeys.delete(item.id); replacingCredentialId = null; keyInput.value = ""; succeeded = true; onChange();
+    } catch (error) {
+      $("#connection-status").textContent = error instanceof Error ? error.message : text("密钥没有保存。", "The key was not saved.");
+      $("#connection-status").dataset.state = "fail";
+    } finally {
+      busy = false;
+      if (succeeded) render();
+      else { $("#save-connection-key").disabled = !keyInput.value; $("#cancel-connection-key").disabled = false; }
+    }
+  });
+  $("#clear-connection-key").addEventListener("click", async () => {
+    const item = selectedConnection();
+    if (!item || busy) return;
+    if (!storedKeys.has(item.id) || !confirm(text(`删除“${item.name}”的本机密钥记录？`, `Delete the local key record for ${item.name}?`))) return;
+    busy = true; $("#clear-connection-key").disabled = true; $("#replace-connection-key").disabled = true;
+    let succeeded = false;
+    try { await deleteCredential(item.id); replacingCredentialId = null; succeeded = true; onChange(); }
+    catch (error) {
+      $("#connection-status").textContent = error instanceof Error ? error.message : text("密钥记录没有删除。", "The key record was not deleted.");
+      $("#connection-status").dataset.state = "fail";
+    } finally {
+      busy = false;
+      if (succeeded) render();
+      else { $("#clear-connection-key").disabled = false; $("#replace-connection-key").disabled = false; }
+    }
+  });
+  const ready = loadCredentials();
+  return { selected, open, ready, render: () => { render(); renderEditorLabels(); } };
 }

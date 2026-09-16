@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Reworked the local workbench so the analysis path, free/AI boundary and report scope are easier to scan on desktop and mobile.
+- Made the top Chinese/English switch the single reading-language control, with automatic on-device detection and translation when the browser supports it.
+- Added brand-independent model-provider management for OpenAI-compatible Chat Completions and Anthropic Messages.
+- Added Windows DPAPI protection for saved model API keys, including reload reuse, endpoint binding, last-four display, replacement and deletion controls.
+- Simplified report presentation and removed translation-status labels that did not help readers understand the project.
+
 ## 0.2.0 — Initial public source snapshot
 
 - Local Chinese/English browser interface and responsive layout.

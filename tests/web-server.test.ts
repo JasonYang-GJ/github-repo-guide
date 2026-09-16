@@ -22,6 +22,7 @@ import type {
   TreeEntry,
 } from "../src/repo/contracts.js";
 import { GitHubApiError } from "../src/repo/github-source.js";
+import { FileCredentialStore, type CredentialProtector } from "../src/security/credential-store.js";
 import { createWebServer, type WebServerOptions } from "../src/web/server.js";
 import { FixtureRepositorySource } from "./support/fixture-repository-source.js";
 
@@ -177,6 +178,83 @@ test("free mode ignores all model credentials and never creates a paid provider"
 });
 
 const customConnection = { name: "Unlisted service", baseUrl: "https://models.example.com/v1", apiFormat: "openai-chat", model: "my-model" };
+
+class ServerTestProtector implements CredentialProtector {
+  public async protect(value: string): Promise<string> { return Buffer.from(`protected:${value}`).toString("base64"); }
+  public async unprotect(value: string): Promise<string> {
+    const decoded = Buffer.from(value, "base64").toString("utf8");
+    if (!decoded.startsWith("protected:")) throw new Error("invalid ciphertext");
+    return decoded.slice("protected:".length);
+  }
+}
+
+test("saved custom credentials survive reload boundaries without being returned to the browser", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "repo-web-credentials-"));
+  const credentialStore = new FileCredentialStore(join(directory, "credentials.v1.json"), new ServerTestProtector());
+  const source = new FixtureRepositorySource(fixtureRoot, "small-typescript-repo");
+  let receivedSecret = "";
+  await withServer({
+    source,
+    credentialStore,
+    outputRoot: await mkdtemp(join(tmpdir(), "repo-web-credential-run-")),
+    modelHostResolver: async () => [{ address: "8.8.8.8", family: 4 }],
+    modelProviderFactory: (_provider, apiKey) => { receivedSecret = apiKey ?? ""; return new PaidFixtureProvider(); },
+  }, async baseUrl => {
+    const rejectedOrigin = await fetch(`${baseUrl}/api/credentials`, {
+      method: "POST", headers: { "Content-Type": "application/json", Origin: "https://attacker.example" },
+      body: JSON.stringify({ providerId: "provider-one", configuration: customConnection, apiKey: "must-not-store" }),
+    });
+    assert.equal(rejectedOrigin.status, 403);
+    assert.deepEqual(await credentialStore.list(), []);
+
+    const rejectedRebinding = await fetch(`${baseUrl}/api/credentials`, {
+      headers: { Host: "attacker.example", Origin: "http://attacker.example" },
+    });
+    assert.equal(rejectedRebinding.status, 403);
+
+    const save = await fetch(`${baseUrl}/api/credentials`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ providerId: "provider-one", configuration: customConnection, apiKey: "stored-server-secret-5678" }),
+    });
+    const saveText = await save.text();
+    assert.equal(save.status, 200, saveText);
+    assert.doesNotMatch(saveText, /stored-server-secret-5678/);
+    assert.match(saveText, /"lastFour":"5678"/);
+
+    const listed = await fetch(`${baseUrl}/api/credentials`);
+    const listedText = await listed.text();
+    assert.equal(listed.status, 200);
+    assert.match(listedText, /windows_dpapi_current_user/);
+    assert.doesNotMatch(listedText, /stored-server-secret-5678|ciphertext|bindingDigest/);
+
+    const analyzed = await analysisRequest(baseUrl, source.url, {
+      provider: "custom", customProvider: customConnection, credentialId: "provider-one", paidModelConsent: true,
+    });
+    assert.equal(analyzed.status, 200, await analyzed.text());
+    assert.equal(receivedSecret, "stored-server-secret-5678");
+
+    const ambiguous = await analysisRequest(baseUrl, source.url, {
+      provider: "custom", customProvider: customConnection, credentialId: "provider-one", apiKey: "another-key", paidModelConsent: true,
+    });
+    assert.equal(ambiguous.status, 400);
+    assert.equal((await ambiguous.json()).error.code, "INVALID_REQUEST");
+
+    const mismatched = await analysisRequest(baseUrl, source.url, {
+      provider: "custom", customProvider: { ...customConnection, baseUrl: "https://other.example.com/v1" }, credentialId: "provider-one", paidModelConsent: true,
+    });
+    assert.equal(mismatched.status, 409);
+    assert.equal((await mismatched.json()).error.code, "CREDENTIAL_DESTINATION_MISMATCH");
+
+    const deleted = await fetch(`${baseUrl}/api/credentials/provider-one`, { method: "DELETE" });
+    assert.deepEqual(await deleted.json(), { deleted: true });
+    const missing = await analysisRequest(baseUrl, source.url, {
+      provider: "custom", customProvider: customConnection, credentialId: "provider-one", paidModelConsent: true,
+    });
+    assert.equal(missing.status, 400);
+    assert.equal((await missing.json()).error.code, "MODEL_API_KEY_REQUIRED");
+  });
+});
+
 for (const apiFormat of ["openai-chat", "anthropic-messages"]) {
   test(`custom ${apiFormat} completes report with its approved host and isolates the key`, async () => {
     const source = new FixtureRepositorySource(fixtureRoot, "small-typescript-repo");
@@ -348,6 +426,9 @@ test("web health and static shell expose the V0.2 credential boundary", async ()
     assert.equal(script.status, 200);
     assert.equal(scriptText.includes("innerHTML"), false);
     assert.match(scriptText, /textContent/);
+    const translatorScript = await fetch(`${baseUrl}/local-translation.js`);
+    assert.equal(translatorScript.status, 200);
+    assert.match(await translatorScript.text(), /export function createLocalTranslation/);
   });
 });
 
@@ -968,6 +1049,8 @@ test("Web report provides a detailed guide without generating, writing or servin
     const report = await (await fetch(`${baseUrl}${reportLink.url}`)).text();
     assert.match(report, /AI 详细解读/);
     assert.match(report, /需结合原文核对/);
+    assert.match(report, /保留仓库引用，便于核对来源/);
+    assert.ok(report.indexOf("AI 详细解读") < report.indexOf("仓库原文与引用"));
     assert.doesNotMatch(report, /口播稿|spoken explainer/);
     // Inspect real artifact files, not only the public download allowlist.
     const walk = async (path: string): Promise<string[]> => {

@@ -38,10 +38,9 @@
     <main>
       <section class="hero" id="workspace">
         <header class="workspace-heading">
-          <p class="eyebrow" data-i18n="heroEyebrow">GitHub 项目分析</p>
           <h1><span class="hero-line" data-i18n="heroLineOne">了解一个项目，</span><span data-i18n="heroLineTwo">从这里开始</span></h1>
           <p class="hero-intro" data-i18n="heroIntro">贴入公开仓库地址，查看项目用途、上手方法和代码结构。报告附有来源，方便你回到原文继续读。</p>
-
+          <button type="button" class="secondary-button resume-report" id="resume-report" hidden data-i18n="resumeReport">继续阅读上一份报告</button>
         </header>
         <div class="workspace-grid">
         <div class="hero-copy">
@@ -60,18 +59,57 @@
               />
               <button class="primary-button" type="submit" id="analyze-button">
                 <span data-i18n="analyzeButton">开始分析</span>
-                <span aria-hidden="true">→</span>
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
               </button>
             </div>
             <section class="connection-workbench" aria-labelledby="connection-heading">
               <header class="connection-heading">
                 <div>
-                  <span data-i18n="connectionEyebrow">本次分析</span>
                   <h2 id="connection-heading" data-i18n="connectionHeading">分析设置</h2>
                 </div>
                 <p data-i18n="credentialPrivacy">初次使用保持默认即可，无需填写密钥。</p>
               </header>
               <div class="connection-grid">
+                <fieldset class="credential-card">
+                  <legend class="sr-only"><b data-i18n="reportModeLegend">报告方式</b></legend>
+                  <label for="provider-select" data-i18n="analysisModeLabel">分析模式</label>
+                  <select id="provider-select">
+                    <option value="deterministic" data-i18n="deterministicOption">基础分析（免费，无需 API）</option>
+                    <option value="custom" id="ai-mode-option">AI 深入解读（使用自己的 API）</option>
+                  </select>
+                  <p class="mode-help" id="mode-help"></p>
+                  <details class="mode-comparison">
+                    <summary data-i18n="modeComparison">两种方式有什么区别？费用怎么算？</summary>
+                    <dl>
+                      <div><dt data-i18n="basicModeTitle">基础分析</dt><dd data-i18n="basicModeDetail">按固定规则整理文档、代码结构和来源。不使用大模型，没有赠送或消耗的模型额度；阅读时会按顶部语言在本机自动翻译。</dd></div>
+                      <div><dt data-i18n="aiModeTitle">AI 深入解读</dt><dd data-i18n="aiModeDetail">在相同读取范围内补充项目用途、适合人群和模块解释，按所选语言生成解读。由你填写的 API Key 所属账户计费；更详细不代表更准确。</dd></div>
+                    </dl>
+                    <p data-i18n="githubCostNote">两种方式都需要联网读取 GitHub，可能遇到访问次数限制，也会使用本机资源。GitHub 访问限额与模型 API 余额是两回事。</p>
+                  </details>
+                  <div class="deepseek-controls" id="ai-controls" hidden>
+                    <label for="connection-select" id="connection-select-label">模型供应商</label>
+                    <div class="connection-picker"><select id="connection-select"></select><button type="button" id="manage-providers" class="utility-button">管理供应商</button></div>
+                    <p id="connection-empty" class="field-note">还没有供应商。点击“管理供应商”添加自己的 API 接点。</p>
+                    <label for="connection-model" id="connection-model-label">模型</label>
+                    <select id="connection-model"></select>
+                    <p class="field-note" id="connection-destination"></p>
+                    <div id="connection-key-editor">
+                      <label for="connection-api-key" id="connection-api-key-label">API Key</label>
+                      <div class="secret-row connection-key-row"><input id="connection-api-key" type="password" autocomplete="new-password" spellcheck="false" maxlength="1024" /><button type="button" id="save-connection-key" class="utility-button">保存密钥</button><button type="button" id="cancel-connection-key" class="utility-button" hidden>取消更换</button></div>
+                    </div>
+                    <div id="connection-key-saved" class="saved-credential" hidden>
+                      <div class="saved-credential-copy"><strong id="connection-key-saved-title">密钥已安全保存</strong><small id="connection-key-saved-detail"></small></div>
+                      <div class="saved-credential-actions"><button type="button" id="replace-connection-key" class="utility-button">更换密钥</button><button type="button" id="clear-connection-key" class="utility-button">删除密钥</button></div>
+                    </div>
+                    <label class="consent-row" for="paid-model-consent">
+                      <input id="paid-model-consent" type="checkbox" />
+                      <span id="custom-paid-consent">我知道仓库文本会发送给所选供应商，并消耗我的 API 余额。</span>
+                    </label>
+                    <p class="connection-status" id="connection-status" aria-live="polite"></p>
+                  </div>
+                </fieldset>
+                <details class="access-settings" id="access-settings">
+                  <summary><span data-i18n="accessSettings">GitHub 访问设置</span><small id="access-settings-note" data-i18n="accessSettingsNote">匿名访问 · 遇到限额时再调整</small></summary>
                 <fieldset class="credential-card">
                   <legend><b data-i18n="githubReadLegend">仓库访问</b></legend>
                   <p data-i18n="githubReadIntro">公开仓库可直接读取。遇到 GitHub 访问限额时，可填入自己的 Token（访问凭证）。</p>
@@ -99,33 +137,10 @@
                     <span data-i18n="checkingConnection">正在检查本机连接配置…</span>
                   </p>
                 </fieldset>
-
-                <fieldset class="credential-card">
-                  <legend><b data-i18n="reportModeLegend">报告方式</b></legend>
-                  <label for="provider-select" data-i18n="analysisModeLabel">分析模式</label>
-                  <select id="provider-select">
-                    <option value="deterministic" data-i18n="deterministicOption">免费分析（不调用模型）</option>
-                    <option value="custom" id="ai-mode-option">AI 分析（自选供应商）</option>
-                  </select>
-                  <div class="deepseek-controls" id="ai-controls" hidden>
-                    <label for="connection-select" id="connection-select-label">模型供应商</label>
-                    <div class="connection-picker"><select id="connection-select"></select><button type="button" id="manage-providers" class="utility-button">管理供应商</button></div>
-                    <p id="connection-empty" class="field-note">还没有供应商。点击“管理供应商”添加自己的 API 接点。</p>
-                    <label for="connection-model" id="connection-model-label">模型</label>
-                    <select id="connection-model"></select>
-                    <p class="field-note" id="connection-destination"></p>
-                    <label for="connection-api-key">API Key</label>
-                    <div class="secret-row connection-key-row"><input id="connection-api-key" type="password" autocomplete="new-password" spellcheck="false" maxlength="1024" /><button type="button" id="clear-connection-key" class="utility-button" data-i18n="clearButton">清空</button></div>
-                    <label class="consent-row" for="paid-model-consent">
-                      <input id="paid-model-consent" type="checkbox" />
-                      <span id="custom-paid-consent">我知道仓库文本会发送给所选供应商，并消耗我的 API 余额。</span>
-                    </label>
-                    <p class="connection-status" id="connection-status" aria-live="polite"></p>
-                  </div>
-                </fieldset>
+                </details>
               </div>
-              <div class="custody-rail" role="note" aria-label="密钥使用说明" data-i18n-aria-label="credentialLifecycle">
-                <span data-i18n="browserMemory">密钥仅留在页面内存</span><i aria-hidden="true">·</i><span data-i18n="oneLocalRequest">不写入报告或日志</span><i aria-hidden="true">·</i><span data-i18n="discardAfterRequest">刷新页面后需重新填写</span>
+              <div class="custody-rail" role="note" aria-label="密钥保存说明" data-i18n-aria-label="credentialLifecycle">
+                <span data-i18n="browserMemory">密钥由 Windows 当前用户加密</span><i aria-hidden="true">·</i><span data-i18n="oneLocalRequest">完整密钥不回显</span><i aria-hidden="true">·</i><span data-i18n="discardAfterRequest">可在供应商记录中删除</span>
               </div>
             </section>
             <div class="form-foot">
@@ -168,10 +183,10 @@
       <section class="run-state" id="run-state" hidden aria-live="polite" aria-busy="true">
         <div class="run-orbit" aria-hidden="true"><span></span></div>
         <div>
-          <p class="eyebrow" data-i18n="analyzingEyebrow">正在分析</p>
           <h2 data-i18n="analyzingHeading">正在读取仓库</h2>
           <p id="run-message" data-i18n="analyzingMessage">正在整理文档、代码和引用。完成检查后，报告会显示在这里。</p>
           <p class="elapsed"><span id="elapsed-time">0</span> <span data-i18n="secondsUnit">秒</span></p>
+          <p class="field-note" data-i18n="waitingNote">耗时取决于仓库大小和网络情况。请保持页面打开，不用重复提交。</p>
         </div>
       </section>
 
@@ -185,11 +200,15 @@
       </section>
 
       <section class="result-shell" id="result-shell" hidden aria-live="polite">
+        <div class="report-toolbar">
+          <button class="text-button" type="button" id="back-to-settings" data-i18n="backToSettings">返回分析设置</button>
+          <span id="result-kicker">项目分析报告</span>
+          <a href="#downloads" class="secondary-button" data-i18n="saveReport">保存报告</a>
+        </div>
         <header class="result-header">
           <div>
-            <p class="eyebrow" id="result-kicker">固定提交的分析结果</p>
-            <h2 id="project-name"></h2>
-            <p id="project-sentence" class="result-sentence"></p>
+            <h2 id="project-name" tabindex="-1"></h2>
+            <details class="report-introduction"><summary data-i18n="reportIntroduction">查看项目简介</summary><p id="project-sentence" class="result-sentence"></p></details>
           </div>
           <div class="gate-stamp">
             <span data-i18n="qualityGate">报告检查</span>
@@ -207,11 +226,6 @@
           <span class="fallback-stage" id="fallback-stage"></span>
         </div>
 
-        <div class="report-language-notice" id="report-language-notice" hidden role="status">
-          <strong id="report-language-heading"></strong>
-          <p id="report-language-message"></p>
-        </div>
-
         <div class="analysis-mode-notice" id="generic-mode-notice" hidden role="status">
           <strong data-i18n="genericModeHeading">本次使用通用文本模式</strong>
           <p data-i18n="genericModeMessage">本次按通用方式读取 README、配置和部分源码。非 JavaScript/TypeScript 文件仅做文本分析，不提供其函数和跨文件调用关系。</p>
@@ -222,6 +236,7 @@
           <a href="#architecture" data-i18n="navArchitecture">架构</a>
           <a href="#evidence" data-i18n="navEvidence">证据</a>
           <a href="#content-pack" data-i18n="navContent">延伸阅读</a>
+          <a href="#limits" data-i18n="navLimits">分析限制</a>
           <a href="#downloads" data-i18n="navDownloads">下载</a>
         </nav>
 
@@ -229,16 +244,29 @@
           <div class="result-main">
             <section class="result-section" id="overview">
               <div class="section-heading">
-                <p class="eyebrow" data-i18n="overviewEyebrow">项目概览</p>
                 <h3 data-i18n="overviewHeading">它做什么</h3>
               </div>
-              <p class="guide-label" data-i18n="guideBasis">文档与仓库信息 · 不代表已验证运行效果</p>
-              <p class="lead-copy" id="project-summary"></p>
-              <div class="guide-sources" id="guide-sources"></div>
+              <p id="translation-status" class="translation-status" role="status" aria-live="polite" hidden></p>
               <div class="guide-interpretation" id="guide-interpretation" hidden>
                 <h4 data-i18n="guideInterpretation">AI 详细解读 · 需结合原文核对</h4>
                 <p id="guide-model-summary"></p>
               </div>
+              <div id="translation-result" hidden>
+                <div id="translation-body"></div>
+              </div>
+              <button type="button" class="utility-button" id="configure-ai-analysis" data-i18n="configureAiAnalysis">配置 AI 深入解读</button>
+              <details class="guide-original" id="guide-original" open>
+                <summary data-i18n="guideOriginal">仓库原文与引用</summary>
+                <p class="guide-label" data-i18n="guideBasis">文档与仓库信息 · 不代表已验证运行效果</p>
+                <p class="lead-copy" id="project-summary"></p>
+                <div class="guide-sources" id="guide-sources"></div>
+                <div class="guide-details" id="translation-original-extra" hidden></div>
+                <div class="guide-details">
+                  <section><h4 data-i18n="guideFeatures">主要功能与特点</h4><ul id="guide-features"></ul></section>
+                  <section><h4 data-i18n="guideUsage">怎样开始使用</h4><ul id="guide-usage"></ul></section>
+                  <section><h4 data-i18n="guideCaveats">使用前注意</h4><ul id="guide-caveats"></ul></section>
+                </div>
+              </details>
               <div class="overview-columns">
                 <div>
                   <h4 data-i18n="problemHeading">解决的问题</h4>
@@ -255,18 +283,12 @@
                   <div class="tag-list" id="technologies"></div>
                 </div>
               </div>
-              <div class="guide-details">
-                <section><h4 data-i18n="guideFeatures">主要功能与特点</h4><ul id="guide-features"></ul></section>
-                <section><h4 data-i18n="guideUsage">怎样开始使用</h4><ul id="guide-usage"></ul></section>
-                <section><h4 data-i18n="guideCaveats">使用前注意</h4><ul id="guide-caveats"></ul></section>
-              </div>
               <p class="guide-coverage" id="guide-coverage"></p>
             </section>
 
             <section class="result-section" id="architecture">
               <div class="section-heading heading-with-meta">
                 <div>
-                  <p class="eyebrow" data-i18n="architectureEyebrow">架构关系</p>
                   <h3 data-i18n="architectureHeading">模块如何连接</h3>
                 </div>
                 <span id="relationship-count" class="section-count"></span>
@@ -286,7 +308,6 @@
             <section class="result-section" id="evidence">
               <div class="section-heading heading-with-meta">
                 <div>
-                  <p class="eyebrow" data-i18n="evidenceEyebrow">证据清单</p>
                   <h3 data-i18n="evidenceHeading">结论从哪里来</h3>
                 </div>
                 <span id="evidence-count" class="section-count"></span>
@@ -297,6 +318,7 @@
               </label>
               <div class="evidence-list" id="evidence-list"></div>
               <p class="empty-message" id="evidence-empty" hidden data-i18n="evidenceEmpty">没有与这个关键词匹配的证据。</p>
+              <button type="button" class="text-button" id="clear-evidence-filter" hidden data-i18n="clearEvidenceFilter">清除筛选，查看全部证据</button>
               <div class="evidence-actions">
                 <span id="evidence-showing"></span>
                 <button class="secondary-button" type="button" id="evidence-more" data-i18n="showMoreEvidence">显示更多证据</button>
@@ -305,7 +327,6 @@
 
             <section class="result-section" id="content-pack">
               <div class="section-heading">
-                <p class="eyebrow" data-i18n="contentEyebrow">深入了解</p>
                 <h3 data-i18n="contentHeading">可以进一步看的地方</h3>
               </div>
               <p class="content-explainer" data-i18n="contentExplainer">以下内容来自本次读取的源码，可作为继续阅读的线索。</p>
@@ -314,7 +335,6 @@
 
             <section class="result-section" id="limits">
               <div class="section-heading">
-                <p class="eyebrow" data-i18n="limitsEyebrow">阅读提醒</p>
                 <h3 data-i18n="limitsHeading">本次分析的限制</h3>
               </div>
               <div class="boundary-columns">
@@ -331,7 +351,6 @@
 
             <section class="result-section downloads-section" id="downloads">
               <div class="section-heading">
-                <p class="eyebrow" data-i18n="artifactsEyebrow">下载</p>
                 <h3 data-i18n="artifactsHeading">保存分析结果</h3>
               </div>
               <p id="artifact-directory" class="artifact-path"></p>
@@ -353,7 +372,7 @@
               <div><dt data-i18n="coreModules">核心模块</dt><dd id="module-total">—</dd></div>
               <div><dt data-i18n="analysisDuration">分析耗时</dt><dd id="duration">—</dd></div>
               <div><dt data-i18n="analysisModeMetric">分析模式</dt><dd id="provider-used">—</dd></div>
-              <div><dt data-i18n="modelUsage">模型用量</dt><dd id="model-usage">—</dd></div>
+              <div><dt data-i18n="modelUsage">模型 API 用量</dt><dd id="model-usage">—</dd></div>
               <div><dt data-i18n="repositoryExecution">仓库执行</dt><dd>0</dd></div>
             </dl>
             <div class="aside-block gate-list-block">
@@ -366,7 +385,6 @@
 
       <section class="method-section" id="method">
         <header>
-          <p class="eyebrow" data-i18n="methodEyebrow">报告说明</p>
           <h2><span data-i18n="methodLineOne">这份报告</span><span data-i18n="methodLineTwo">是怎么来的</span></h2>
         </header>
         <div class="method-grid">
@@ -378,12 +396,11 @@
       </section>
 
       <section class="boundary-section" id="boundary">
-        <p class="eyebrow" data-i18n="boundaryEyebrow">使用须知</p>
         <h2 data-i18n="boundaryHeading">分析前，了解这几点</h2>
         <p data-i18n="boundaryBody">目前只支持公开 GitHub 仓库。报告用于了解项目，不代替安装测试或安全审计。</p>
         <div class="usage-grid">
           <article><h3 data-i18n="scopeHeading">不会运行仓库代码</h3><p data-i18n="scopeBody">只读取文本，不克隆仓库、不安装依赖，也不执行脚本或测试。仓库内容不会被当作操作指令。</p></article>
-          <article><h3 data-i18n="privacyHeading">密钥由你保管</h3><p data-i18n="privacyBody">连接配置保存在当前浏览器；你填写的密钥只留在页面内存，不写入报告或日志，刷新后需重新填写。</p></article>
+          <article><h3 data-i18n="privacyHeading">密钥由你保管</h3><p data-i18n="privacyBody">供应商配置保存在当前浏览器；API 密钥由 Windows 当前用户加密保存在这台电脑，不写入报告或日志，也不会在页面回显完整内容。</p></article>
           <article><h3 data-i18n="costHeading">AI 分析单独计费</h3><p data-i18n="costBody">使用 AI 时，仓库文本会发送给所选供应商，由你的 API 账户付费。模型生成失败时回退到免费报告，不自动付费重试。</p></article>
         </div>
       </section>
@@ -395,15 +412,15 @@
     </footer>
 
     <dialog id="provider-dialog" aria-labelledby="provider-dialog-title">
+      <header class="provider-dialog-bar"><span data-i18n="providerSettings">模型供应商设置</span><button type="button" id="close-provider-dialog" aria-label="关闭" class="provider-close"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /></svg></button></header>
       <div class="provider-manager">
         <aside class="provider-sidebar">
           <h2 id="provider-list-heading">我的模型供应商</h2>
           <div id="provider-list" role="group" aria-label="供应商列表"></div>
           <button type="button" class="utility-button provider-add" id="new-provider">＋ 添加供应商</button>
-          <p id="provider-storage-note">只记住连接配置，密钥不保存。</p>
+          <p id="provider-storage-note">供应商和密钥记录保存在这台电脑；密钥由 Windows 当前用户加密。</p>
         </aside>
         <section class="provider-editor">
-          <button type="button" id="close-provider-dialog" aria-label="关闭" class="provider-close">×</button>
           <h2 id="provider-dialog-title">添加模型供应商</h2>
           <p id="provider-dialog-intro">配置自己的 API 端点与模型，不限定供应商品牌。</p>
           <form id="provider-editor-form">
@@ -413,7 +430,7 @@
             <input id="provider-base-url" type="url" required maxlength="500" autocomplete="off" spellcheck="false" placeholder="https://api.example.com/v1" />
             <p class="field-note" id="provider-url-help">填写 API 基础地址，不含 /chat/completions 或 /messages；仅支持公网 HTTPS。</p>
             <label for="provider-editor-key">API Key</label>
-            <input id="provider-editor-key" type="password" maxlength="1024" autocomplete="new-password" spellcheck="false" placeholder="输入自己的 API Key（仅保留在本次页面内存）" />
+            <input id="provider-editor-key" type="password" maxlength="1024" autocomplete="new-password" spellcheck="false" placeholder="输入自己的 API Key（保存后刷新仍可使用）" />
             <label for="provider-api-format" id="provider-format-label">API 格式</label>
             <select id="provider-api-format"><option value="openai-chat">OpenAI Chat Completions (/chat/completions)</option><option value="anthropic-messages">Anthropic Messages (/v1/messages)</option></select>
             <div id="provider-models-heading">模型列表</div>
@@ -424,16 +441,16 @@
               <select id="provider-token-parameter"><option value="max_tokens">max_tokens</option><option value="max_completion_tokens">max_completion_tokens</option></select>
               <label class="consent-row"><input type="checkbox" id="provider-json-mode" checked /><span id="provider-json-label">发送 JSON 模式参数（不兼容时可关闭，本地仍验证结果）</span></label>
             </details>
-            <p id="provider-editor-status" class="connection-status" role="status"></p>
-            <div class="provider-editor-footer">
-              <button type="button" id="delete-provider" class="utility-button" hidden>删除供应商</button>
-              <button type="button" id="check-provider" class="utility-button">检查配置</button>
-              <button type="submit" id="save-provider" class="provider-save">添加供应商</button>
-            </div>
             <p class="field-note" id="provider-check-note">检查配置不会调用模型，也不代表密钥有效；开始分析前需另行确认费用。</p>
           </form>
         </section>
       </div>
+            <div class="provider-editor-footer">
+              <p id="provider-editor-status" class="connection-status" role="status"></p>
+              <button type="button" id="delete-provider" class="utility-button" hidden>删除供应商</button>
+              <button type="button" id="check-provider" class="utility-button">检查配置</button>
+              <button type="submit" form="provider-editor-form" id="save-provider" class="provider-save">添加供应商</button>
+            </div>
     </dialog>
     <noscript>这个本地工作台需要启用 JavaScript 才能提交分析请求和展示结果。 This local workbench requires JavaScript.</noscript>
   </body>
