@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
+import { HistoryStore, historySummary } from "./history-store.js";
 import {
   createServer,
   type IncomingMessage,
@@ -54,6 +55,7 @@ const STATIC_ASSETS = new Map([
   ["/index.html", "index.html"],
   ["/app.css", "app.css"],
   ["/app.js", "app.js"],
+  ["/library.js", "library.js"],
   ["/provider-manager.js", "provider-manager.js"],
   ["/local-translation.js", "local-translation.js"],
 ]);
@@ -562,6 +564,8 @@ function publicAnalysisError(error: unknown, providerSelection: WebProvider = "d
   };
 }
 
+export type WebReport = ReturnType<typeof buildViewModel>;
+
 function buildViewModel(
   result: Awaited<ReturnType<typeof analyzeRepository>>,
   runId: string,
@@ -764,6 +768,7 @@ export function createWebServer(options: WebServerOptions = {}): Server {
   const environmentGitHubToken =
     allowEnvironmentCredentials && (environment.GITHUB_TOKEN?.trim().length ?? 0) > 0;
   const runDownloads = new Map<string, RunDownload>();
+  const history = new HistoryStore(outputRoot);
   let analysisActive = false;
 
   return createServer(async (request, response) => {
@@ -779,6 +784,7 @@ export function createWebServer(options: WebServerOptions = {}): Server {
         }
         const payload = {
           status: "ok",
+          application_id: "github-repo-guide-workbench-v1",
           preview_version: "0.2.0",
           default_provider: "deterministic-v1",
           providers: [
@@ -807,6 +813,25 @@ export function createWebServer(options: WebServerOptions = {}): Server {
           sendText(response, 200, `${JSON.stringify(payload)}\n`, "application/json; charset=utf-8", true);
         } else {
           sendJson(response, 200, payload);
+        }
+        return;
+      }
+
+      if (url.pathname === "/api/history" || url.pathname.startsWith("/api/history/")) {
+        if (!sameOrigin(request)) throw requestFailure(403, "ORIGIN_REJECTED", "请求来源与本地应用不一致。");
+        if (url.pathname === "/api/history" && method === "GET") {
+          sendJson(response, 200, await history.list());
+          return;
+        }
+        const id = url.pathname.slice("/api/history/".length);
+        if (method === "GET") {
+          const entry = await history.get(id);
+          sendJson(response, 200, { ...entry.report, history: historySummary(entry) });
+        } else if (method === "PATCH") {
+          sendJson(response, 200, historySummary(await history.update(id, await readJsonBody(request))));
+        } else {
+          response.setHeader("Allow", "GET, PATCH");
+          throw requestFailure(405, "METHOD_NOT_ALLOWED", "历史记录只支持读取和修改笔记或收藏。");
         }
         return;
       }
@@ -926,7 +951,13 @@ export function createWebServer(options: WebServerOptions = {}): Server {
         }
         const runId = artifactMatch[1] ?? "";
         const fileName = artifactMatch[2] ?? "";
-        const run = runDownloads.get(runId);
+        let run = runDownloads.get(runId);
+        if (run === undefined) {
+          try {
+            const entry = await history.get(runId);
+            run = { directory: history.artifactPath(entry), files: DOWNLOADABLE_ARTIFACTS };
+          } catch { /* An unknown or invalid saved report cannot authorize a download. */ }
+        }
         if (
           run === undefined ||
           !DOWNLOADABLE_ARTIFACTS.has(fileName) ||
@@ -1104,7 +1135,13 @@ export function createWebServer(options: WebServerOptions = {}): Server {
             if (oldest === undefined) break;
             runDownloads.delete(oldest);
           }
-          sendJson(response, 200, buildViewModel(result, runId, locale));
+          const report = buildViewModel(result, runId, locale);
+          try {
+            const entry = await history.save(runId, report, result.outputDirectory);
+            sendJson(response, 200, { ...report, history: historySummary(entry) });
+          } catch {
+            sendJson(response, 200, { ...report, history_warning: "HISTORY_SAVE_FAILED" });
+          }
         } catch (error) {
           sendJson(response, 422, { error: publicAnalysisError(error, providerSelection) });
         } finally {

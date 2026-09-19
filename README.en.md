@@ -23,6 +23,10 @@ Open **http://127.0.0.1:4173**, switch to EN if needed, and paste `https://githu
 
 This is a **V0.2 local preview**, not a hosted multi-user service. No shared API credits are included.
 
+On Windows, after installing dependencies, run `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-local.ps1` to build when needed, start the server in the background and open the browser. Repeated launches reuse this app; conflicting programs are never terminated.
+
+**My projects** keeps successful reports, favorites and per-report notes under local `output/web/history/`. Select two reports for a source-linked comparison without model calls. Reports and downloads survive server restarts. Earlier download-only reports are not imported automatically. Notes and reports are not encrypted or cloud-synced; review them before sharing. Unsaved note drafts do not survive page reloads.
+
 ## What it provides
 
 - Project purpose, documented features, audience, setup and caveats.

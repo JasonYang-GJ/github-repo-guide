@@ -23,6 +23,7 @@
         </span>
       </a>
       <div class="header-tools">
+        <button type="button" class="text-button" id="open-library">我的项目</button>
         <nav aria-label="页面导航" data-i18n-aria-label="pageNavigation">
           <a href="#method" data-i18n="navMethod">报告说明</a>
           <a href="#boundary" data-i18n="navBoundary">使用须知</a>
@@ -178,6 +179,27 @@
           <p class="trace-note" data-i18n="traceFailureNote">免费模式整理文档和代码信息；AI 模式在此基础上补充解读，需要配置自己的模型供应商。</p>
         </aside>
         </div>
+      </section>
+
+      <section class="library" id="library" aria-labelledby="library-title">
+        <header class="library-heading">
+          <div><h2 id="library-title">我的项目</h2><p id="library-intro">分析结果自动保存在本机。收藏、写笔记，或选两份报告进行对比。</p></div>
+          <button type="button" class="secondary-button" id="library-refresh">刷新列表</button>
+        </header>
+        <div class="library-controls">
+          <label for="library-search"><span id="library-search-label">搜索项目或笔记</span><input id="library-search" type="search" maxlength="200" /></label>
+          <label class="library-check"><input id="library-favorites" type="checkbox" /><span id="library-favorites-label">只看收藏</span></label>
+          <button type="button" class="secondary-button" id="library-compare" disabled>对比已选（0/2）</button>
+          <button type="button" class="text-button" id="library-clear">清空选择</button>
+        </div>
+        <p id="library-status" role="status"></p>
+        <div id="library-list"></div>
+        <button type="button" class="secondary-button" id="library-more" hidden>显示更多</button>
+        <section id="library-comparison" hidden aria-labelledby="comparison-title" tabindex="-1">
+          <h3 id="comparison-title">项目对比</h3>
+          <p id="comparison-note">仅对照已保存报告；没有资料不代表没有功能。点击来源可核对原文。</p>
+          <div class="comparison-scroll" tabindex="0" role="region" aria-label="项目对比表"><table id="comparison-table"></table></div>
+        </section>
       </section>
 
       <section class="run-state" id="run-state" hidden aria-live="polite" aria-busy="true">

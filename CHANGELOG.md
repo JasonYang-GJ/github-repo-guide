@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added durable local report history, favorites, per-report notes, search and source-linked two-report comparison without model calls.
+- Restored saved-report downloads across server restarts and isolated integration-test output from the user's library.
+- Added a Windows background launcher that identifies this app and refuses to terminate conflicting services.
+
 - Reworked the local workbench so the analysis path, free/AI boundary and report scope are easier to scan on desktop and mobile.
 - Made the top Chinese/English switch the single reading-language control, with automatic on-device detection and translation when the browser supports it.
 - Added brand-independent model-provider management for OpenAI-compatible Chat Completions and Anthropic Messages.

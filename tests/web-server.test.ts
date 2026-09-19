@@ -60,7 +60,8 @@ async function withServer(
   options: WebServerOptions,
   run: (baseUrl: string) => Promise<void>,
 ): Promise<void> {
-  const server = createWebServer({ assetRoot, schemaDirectory, ...options });
+  const isolatedOutput = options.outputRoot ?? await mkdtemp(join(tmpdir(), "repo-web-test-"));
+  const server = createWebServer({ assetRoot, schemaDirectory, ...options, outputRoot: isolatedOutput });
   await new Promise<void>((resolveListen, rejectListen) => {
     server.once("error", rejectListen);
     server.listen(0, "127.0.0.1", resolveListen);
@@ -383,6 +384,7 @@ test("web health and static shell expose the V0.2 credential boundary", async ()
     assert.match(health.headers.get("content-security-policy") ?? "", /default-src 'self'/);
     assert.deepEqual(await health.json(), {
       status: "ok",
+      application_id: "github-repo-guide-workbench-v1",
       preview_version: "0.2.0",
       default_provider: "deterministic-v1",
       providers: [

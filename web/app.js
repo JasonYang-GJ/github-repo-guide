@@ -1,5 +1,6 @@
 import { createProviderManager } from "./provider-manager.js";
 import { createLocalTranslation } from "./local-translation.js";
+import { createLibrary } from "./library.js";
 
 const COPY = {
   "zh-CN": {
@@ -273,6 +274,7 @@ let currentEvidence = [];
 let evidenceLimit = 12;
 let capabilities = null;
 let translationView = null;
+let library = null;
 
 function setText(selector, value) {
   const target = document.querySelector(selector);
@@ -319,6 +321,7 @@ function applyLocale(locale, persist = true) {
   githubModeChanged();
   if (capabilities) refreshDeepSeekStatus();
   if (currentResult) renderResult(currentResult, false);
+  library?.render();
 }
 
 function showLoading() {
@@ -813,7 +816,7 @@ function scrollToElement(element) {
 function setReportView(reading, focus = true) {
   const showReport = reading && Boolean(currentResult);
   document.body.classList.toggle("reading-report", showReport);
-  for (const id of ["workspace", "method", "boundary"]) document.getElementById(id).hidden = showReport;
+  for (const id of ["workspace", "method", "boundary", "library"]) document.getElementById(id).hidden = showReport;
   resultShell.hidden = !showReport;
   document.querySelector(".skip-link").href = showReport ? "#project-name" : "#workspace";
   if (showReport) errorPanel.hidden = true;
@@ -913,6 +916,11 @@ form.addEventListener("submit", async (event) => {
     }
     stopLoading();
     renderResult(data);
+    await library.refresh();
+    if (data.history_warning) {
+      library.warning();
+      alert(modelText("报告已生成，但未能保存到历史。请先下载报告，再检查磁盘空间与权限。", "Report generated but history could not be saved. Download it now and check disk space and permissions."));
+    }
   } catch {
     showError("LOCAL_SERVER_UNAVAILABLE", t("localServerUnavailable"));
   }
@@ -986,6 +994,12 @@ document.querySelector("#language-switch").addEventListener("click", (event) => 
 
 providerManager = createProviderManager({ getLocale: () => currentLocale, onChange: () => providerChanged(true) });
 translationView = createLocalTranslation({ document, t });
+library = createLibrary({ getLocale: () => currentLocale, openReport: data => renderResult(data) });
+document.querySelector("#open-library").addEventListener("click", () => {
+  setReportView(false, false);
+  document.querySelector("#library-search").focus({ preventScroll: true });
+  scrollToElement(document.querySelector("#library"));
+});
 applyLocale(currentLocale, false);
 providerManager.render();
 loadCapabilities();

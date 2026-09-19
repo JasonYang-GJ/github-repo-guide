@@ -49,6 +49,12 @@ hosted service and does not accept private repositories.
   excluded from cache keys and values.
 - Analysis artifacts may contain public repository paths, excerpts and
   metadata. Review them before sharing.
+- Local history stores only server-generated report views and user-authored notes
+  under ignored `output/web/history`, never analysis request bodies or credentials.
+  Notes and reports are not encrypted. Library reads/updates enforce loopback host
+  and same-origin checks; IDs and note lengths are validated. Downloads are limited
+  to the artifact allowlist within a saved run. Comparison uses text nodes and
+  GitHub HTTPS source links, never repository-provided HTML.
 
 Do not expose the local server directly to a public network. It has no
 accounts, authentication, multi-user isolation or production rate limiter.
