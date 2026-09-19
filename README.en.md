@@ -10,13 +10,13 @@ For developers exploring unfamiliar projects, people learning from open source, 
 
 ## Updated interface
 
-**My projects** keeps successful reports available across restarts. Search by project or note, favorite a candidate, and reopen its report without repeating analysis.
+**My projects** groups snapshots of the same repository, preserving each version's favorites and notes across restarts. Drafts save in the browser as you type and recover after reload. Search by project or saved note and reopen reports without repeating analysis.
 
-![Local project library with history, favorites, search and note controls](docs/images/project-library.png)
+![Local library with repository groups, separate report versions, favorites and note controls](docs/images/project-library.png)
 
-**Compare two reports** to inspect documented purpose, features, setup, source references and reading limits. Missing evidence is labelled explicitly; comparison makes no model calls and does not automatically rank projects.
+**Compare two reports**, from different projects or two analyses of the same project, to inspect purpose, features, operating systems, models/external services, installation and data storage. Optional Chinese/English on-device reading preserves expandable originals and source links. Missing evidence is labelled explicitly; comparison makes no model calls and does not automatically rank projects.
 
-![Side-by-side report comparison with commit versions and original source links](docs/images/project-comparison.png)
+![On-device Chinese comparison reading with report versions, expandable originals and source links](docs/images/project-comparison.png)
 
 Screenshots show the real local interface with free analyses of public repositories. They contain no model keys or private note bodies. Comparisons show original excerpts by default; optional on-device reading preserves originals and references without generating new conclusions.
 
@@ -50,15 +50,15 @@ Comparison dimensions retrieve related source excerpts about operating systems, 
 - Source references pinned to one complete commit, with documentation and AI interpretation labelled separately.
 - Downloadable Markdown reports, JSON data and Mermaid diagrams.
 - Chinese/English interface, with free analysis or user-managed model connections.
-- Persistent local report history, favorites, per-report notes and project/note search.
-- Source-linked comparison of two saved reports without model calls.
+- Repository-grouped history, per-version favorites and notes, reload-safe browser drafts and saved-note conflict checks.
+- Source-linked comparison dimensions and optional on-device reading of two saved reports without model calls.
 - Windows background launcher with service identification and existing-instance reuse.
 
 Free mode organizes source text using fixed rules without calling a model. AI mode adds interpretation using your API account. Supported formats are **OpenAI-compatible Chat Completions** and **Anthropic Messages**; vendors are not restricted to a predefined list. Not every protocol/model is compatible.
 
 The UI labels these modes **Basic analysis (free, no API)** and **AI in-depth explanation (your API)**. Basic mode grants or uses no model credits; both modes use local resources and are subject to GitHub access limits, which are separate from model billing.
 
-The top 中文 / EN switch is the only reading-language setting. Once a report is available, the page detects the source language automatically and translates when needed; there is no second source-language selector or translation button. Output targets are Chinese or English only. Translation is shown ahead of the originals, with code blocks and source links preserved. It is a reading aid, not a fact check or a whole-repository translation. Switching languages never calls a paid model, and server-generated reports and existing AI explanations are not overwritten.
+The top 中文 / EN switch sets the interface and reading language. A single report detects its source language and translates when needed, without a separate source-language selector. Comparison reading starts when you click **Read in English (on-device)** or the Chinese equivalent. Output targets are Chinese or English only. Single-report translations appear ahead of the originals, with code blocks and source links preserved. Translation is a reading aid, not a fact check or a whole-repository translation. Switching languages never calls a paid model, and server-generated reports and existing AI explanations are not overwritten.
 
 Automatic detection and translation use the browser's [Language Detector API](https://developer.chrome.com/docs/ai/language-detection) and [Translator API](https://developer.chrome.com/docs/ai/translator-api), checked at runtime. First use may download on-device language packs and use bandwidth, disk space and local compute, but no API key or model API balance. Text is not sent to a cloud model. Unsupported browsers or language pairs, detection failures and failed downloads keep the original report readable without a paid fallback. Automatic translation times out after two minutes; the current-result JSON can include a separate `reading_translation` field. Server-generated artifacts remain unchanged and reloading clears temporary translations. Unsupported and mobile browsers can still read originals or use their own model API.
 
