@@ -41,6 +41,10 @@ test("history persists a real report, concurrent notes/favorite, downloads and t
     const report = await (await fetch(`${url}/api/history/${id}`)).json();
     assert.equal(report.history.starred, true);
     assert.equal(report.history.note, "研究用途 <script>alert(1)</script>");
+    const conflict = await fetch(`${url}/api/history/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ note: "must not overwrite", expectedNote: "stale note" }) });
+    assert.equal(conflict.status, 409);
+    const stillSaved = await (await fetch(`${url}/api/history/${id}`)).json();
+    assert.equal(stillSaved.history.note, report.history.note);
     const download = await fetch(`${url}${artifact}`);
     assert.equal(download.status, 200);
     assert.ok((await download.text()).length > 100);

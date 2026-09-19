@@ -21,6 +21,7 @@ Browser / CLI
 - `src/application`, `src/artifacts`: orchestration, fallback and output writing.
 - `src/web`, `web`: loopback server, browser UI and supplier configuration.
 - `src/web/history-store.ts`, `web/library.js`: local report snapshots, atomic metadata updates, search and two-report comparison.
+- `web/library-data.js`, `web/note-drafts.js`: repository grouping, source-excerpt dimensions and bounded browser draft records.
 - `src/security/credential-store.ts`: Windows current-user DPAPI protection with provider destination binding.
 - `scripts/start-local.ps1`: Windows background launcher and app-identity checks.
 - `src/content`, `src/exploration`: reading/content logic and retained research interfaces.
@@ -38,3 +39,11 @@ analysis request bodies and credentials are not saved there. On restart, saved
 run metadata restores allowlisted downloads under `output/web/runs/`. Invalid or
 unreadable records are reported without overwriting them. History and comparison
 are local operations and do not trigger repository reads or model inference.
+
+Grouping preserves independent immutable report IDs and per-version metadata.
+Drafts retain a base note in per-origin localStorage; saved notes use an atomic
+expected-note check to reject competing updates. Storage errors preserve a page
+memory fallback without claiming persistence. Comparison dimensions retrieve
+existing source excerpts, never infer support from topic keywords. Optional
+on-device translation reuses the existing translation module, preserves code and
+original sources, cancels stale work and caches at most 12 report/language pairs.

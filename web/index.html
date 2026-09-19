@@ -193,11 +193,18 @@
           <button type="button" class="text-button" id="library-clear">清空选择</button>
         </div>
         <p id="library-status" role="status"></p>
+        <p id="library-selection" class="library-selection" aria-live="polite"></p>
         <div id="library-list"></div>
         <button type="button" class="secondary-button" id="library-more" hidden>显示更多</button>
         <section id="library-comparison" hidden aria-labelledby="comparison-title" tabindex="-1">
           <h3 id="comparison-title">项目对比</h3>
           <p id="comparison-note">仅对照已保存报告；没有资料不代表没有功能。点击来源可核对原文。</p>
+          <div class="comparison-reading-controls">
+            <button type="button" class="secondary-button" id="comparison-read">中文阅读（本机）</button>
+            <button type="button" class="utility-button" id="comparison-original" disabled>显示原文</button>
+            <button type="button" class="utility-button" id="comparison-cancel" hidden>取消翻译</button>
+          </div>
+          <p id="comparison-reading-status" role="status"></p>
           <div class="comparison-scroll" tabindex="0" role="region" aria-label="项目对比表"><table id="comparison-table"></table></div>
         </section>
       </section>

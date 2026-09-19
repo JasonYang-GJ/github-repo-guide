@@ -39,6 +39,22 @@
 .library-note textarea { display: block; margin: 8px 0 12px; resize: vertical; }
 .library-note [role="status"] { margin-left: 12px; color: var(--success); font-size: 13px; }
 .library-row button[aria-pressed="true"] { color: var(--accent); background: var(--accent-soft); border-color: var(--accent); }
+.library-group { border-top: 1px solid var(--line); }
+.library-group > summary { cursor: pointer; padding: 20px 4px; color: var(--ink); }
+.library-group > summary strong { font-size: 16px; overflow-wrap: anywhere; }
+.library-group-meta { display: block; color: var(--muted); font-size: 13px; margin: 6px 0 0 20px; }
+.library-group .library-row { margin-left: 20px; }
+.library-group .library-project-name { font-size: 14px; }
+.library-note button + button { margin-left: 10px; }
+.library-note [role="status"] { display: block; margin: 9px 0 0; }
+.library-note [data-state="fail"], #comparison-reading-status[data-state="fail"] { color: var(--red); }
+.library-selection { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.library-selection:empty { display: none; }
+.comparison-reading-controls { display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0 8px; }
+#comparison-reading-status { color: var(--muted); font-size: 13px; min-height: 24px; margin: 8px 0 20px; }
+.comparison-translation-label, .comparison-basis, .comparison-original summary { color: var(--muted); font-size: 12px; }
+.comparison-original { margin: 8px 0; }
+.comparison-original summary { cursor: pointer; }
 #library-comparison { margin-top: 36px; scroll-margin-top: 24px; }
 #library-comparison h3 { margin-bottom: 8px; font-size: 22px; }
 #comparison-note { color: var(--muted); font-size: 13px; }

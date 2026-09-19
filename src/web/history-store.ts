@@ -94,12 +94,15 @@ export class HistoryStore {
   }
   update(id: string, patch: Record<string, unknown>): Promise<HistoryEntry> {
     validId(id);
-    if (!Object.keys(patch).length || Object.keys(patch).some(key => !["starred", "note"].includes(key)) ||
+    if (!Object.keys(patch).length || Object.keys(patch).some(key => !["starred", "note", "expectedNote"].includes(key)) ||
+      (patch.expectedNote !== undefined && (typeof patch.expectedNote !== "string" || patch.expectedNote.length > 1500 || patch.note === undefined)) ||
       (patch.starred !== undefined && typeof patch.starred !== "boolean") ||
       (patch.note !== undefined && (typeof patch.note !== "string" || patch.note.length > 1500)))
       throw new HistoryError(400, "HISTORY_PATCH_INVALID", "只支持修改收藏和最多 1500 字的笔记。");
     return this.serial(async () => {
       const entry = await this.get(id);
+      if (typeof patch.expectedNote === "string" && entry.note !== patch.expectedNote)
+        throw new HistoryError(409, "NOTE_CONFLICT", "已保存笔记刚被其他页面修改。草稿仍保留，请重新保存并核对差异。");
       if (typeof patch.starred === "boolean") entry.starred = patch.starred;
       if (typeof patch.note === "string") entry.note = patch.note;
       await this.write(entry);

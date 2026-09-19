@@ -56,6 +56,8 @@ const STATIC_ASSETS = new Map([
   ["/app.css", "app.css"],
   ["/app.js", "app.js"],
   ["/library.js", "library.js"],
+  ["/library-data.js", "library-data.js"],
+  ["/note-drafts.js", "note-drafts.js"],
   ["/provider-manager.js", "provider-manager.js"],
   ["/local-translation.js", "local-translation.js"],
 ]);

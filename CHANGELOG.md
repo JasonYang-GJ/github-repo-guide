@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Grouped saved reports by repository with independent version selection, favorites and notes.
+- Added reload-safe browser note drafts, storage-failure feedback and saved-note conflict checks.
+- Added source-excerpt comparison dimensions for operating systems, models/services, installation and storage.
+- Added optional on-device Chinese/English comparison reading with originals, cancellation, retry and bounded caching.
 - Added durable local report history, favorites, per-report notes, search and source-linked two-report comparison without model calls.
 - Restored saved-report downloads across server restarts and isolated integration-test output from the user's library.
 - Added a Windows background launcher that identifies this app and refuses to terminate conflicting services.

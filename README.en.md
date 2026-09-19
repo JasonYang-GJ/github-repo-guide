@@ -18,7 +18,7 @@ For developers exploring unfamiliar projects, people learning from open source, 
 
 ![Side-by-side report comparison with commit versions and original source links](docs/images/project-comparison.png)
 
-Screenshots show the real local interface with free analyses of public repositories. They contain no model keys or private note bodies. Comparison excerpts stay in their original language; the comparison does not translate them or generate new conclusions.
+Screenshots show the real local interface with free analyses of public repositories. They contain no model keys or private note bodies. Comparisons show original excerpts by default; optional on-device reading preserves originals and references without generating new conclusions.
 
 ## Start locally
 
@@ -37,7 +37,11 @@ This is a **V0.2 local preview**, not a hosted multi-user service. No shared API
 
 On Windows, after installing dependencies, run `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-local.ps1` to build when needed, start the server in the background and open the browser. Repeated launches reuse this app; conflicting programs are never terminated.
 
-**My projects** keeps successful reports, favorites and per-report notes under local `output/web/history/`. Select two reports for a source-linked comparison without model calls. Reports and downloads survive server restarts. Earlier download-only reports are not imported automatically. Notes and reports are not encrypted or cloud-synced; review them before sharing. Unsaved note drafts do not survive page reloads.
+**My projects** groups reports by repository while preserving each snapshot's favorites and notes under local `output/web/history/`. Select two reports, including two versions of the same project, for a source-linked comparison. Reports and downloads survive server restarts. Earlier download-only reports are not imported automatically. Notes and reports are not encrypted or cloud-synced; review them before sharing.
+
+Note drafts save automatically in the current browser and origin and recover after reload. Click **Save note** to commit a draft to its report; conflicting edits prompt for review. Drafts are unencrypted, do not sync across browsers, ports or devices, and are lost when browser data is cleared. Storage failures show a warning instead of claiming a successful save.
+
+Comparison dimensions retrieve related source excerpts about operating systems, models/external services, installation and data storage; keyword matches do not verify capabilities. Optional **Read in English (on-device)** / Chinese reading uses compatible browser translation, may download language packs, and offers cancellation, retry and original text. Unsupported browsers keep originals without falling back to a paid API. Translations are reading aids; check commands and references against the originals.
 
 ## What it provides
 

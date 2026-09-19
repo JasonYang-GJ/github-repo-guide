@@ -55,6 +55,15 @@ hosted service and does not accept private repositories.
   and same-origin checks; IDs and note lengths are validated. Downloads are limited
   to the artifact allowlist within a saved run. Comparison uses text nodes and
   GitHub HTTPS source links, never repository-provided HTML.
+- Note drafts and their base notes are stored unencrypted in per-report browser
+  localStorage records. They contain no application-managed credentials and are
+  not cloud-synced. Clearing site data removes them; storage errors are reported.
+  Saved-note updates from the UI compare the expected note atomically and reject
+  stale edits with a conflict response. Corrupt draft records are not overwritten.
+- Optional comparison translation reuses the browser's on-device translator and
+  protected-literal handling. It keeps original excerpts, code and source links,
+  leaves user notes untranslated, and never falls back to a model API. Reading
+  translations stay in bounded page memory and do not modify report snapshots.
 
 Do not expose the local server directly to a public network. It has no
 accounts, authentication, multi-user isolation or production rate limiter.
