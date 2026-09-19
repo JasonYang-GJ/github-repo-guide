@@ -1,12 +1,24 @@
 # GitHub Repo Guide
 
-**Paste a public GitHub repository URL to generate a local, source-linked report: what it does, who it is for, how to start and how the code is organized.**
+**Turn public GitHub repositories into source-linked reports, then build a local project library with history, favorites, notes and side-by-side comparison.**
 
 For developers exploring unfamiliar projects, people learning from open source, and teams doing an initial technical review. Basic analysis needs no API key; connect your own model API for deeper interpretation. Reports can be read in Chinese or English, with on-device translation in compatible browsers.
 
 [简体中文](README.md) · [Model setup](docs/model-providers.md) · [Security](SECURITY.md)
 
 ![Local repository analysis interface](docs/images/workbench.png)
+
+## Updated interface
+
+**My projects** keeps successful reports available across restarts. Search by project or note, favorite a candidate, and reopen its report without repeating analysis.
+
+![Local project library with history, favorites, search and note controls](docs/images/project-library.png)
+
+**Compare two reports** to inspect documented purpose, features, setup, source references and reading limits. Missing evidence is labelled explicitly; comparison makes no model calls and does not automatically rank projects.
+
+![Side-by-side report comparison with commit versions and original source links](docs/images/project-comparison.png)
+
+Screenshots show the real local interface with free analyses of public repositories. They contain no model keys or private note bodies. Comparison excerpts stay in their original language; the comparison does not translate them or generate new conclusions.
 
 ## Start locally
 
@@ -34,6 +46,9 @@ On Windows, after installing dependencies, run `powershell -NoProfile -Execution
 - Source references pinned to one complete commit, with documentation and AI interpretation labelled separately.
 - Downloadable Markdown reports, JSON data and Mermaid diagrams.
 - Chinese/English interface, with free analysis or user-managed model connections.
+- Persistent local report history, favorites, per-report notes and project/note search.
+- Source-linked comparison of two saved reports without model calls.
+- Windows background launcher with service identification and existing-instance reuse.
 
 Free mode organizes source text using fixed rules without calling a model. AI mode adds interpretation using your API account. Supported formats are **OpenAI-compatible Chat Completions** and **Anthropic Messages**; vendors are not restricted to a predefined list. Not every protocol/model is compatible.
 
@@ -57,6 +72,8 @@ In AI mode, open **Manage providers**, enter a name, public HTTPS Base URL, API 
 - Custom endpoints require public HTTPS. Local/private endpoints, native Responses/Gemini APIs, OAuth-only clients and automatic proxy-environment routing are not supported.
 - **Do not expose the local port publicly.** Authentication, multi-user isolation and public-service rate limiting are not implemented.
 - Both model protocols have mocked transport coverage, not live paid acceptance for every vendor.
+
+After reopening the Windows app, saved keys appear as a saved state and last four characters, not a full key in the input. Select the original provider record in the same browser profile and origin. If an older checkout is running, stop that confirmed instance before launching this updated checkout. Browser configuration does not automatically follow a different browser or port.
 
 Reports are stored in `output/web/runs/` and excluded from Git. If port 4173 is occupied, set the `PORT` environment variable to `4174` before starting.
 
